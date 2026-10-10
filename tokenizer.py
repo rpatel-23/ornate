@@ -19,6 +19,3 @@ def encode(s):
 
 def decode(ids):
     return "".join(itos[i] for i in ids)
-
-print(encode("hello"))
-print(decode(encode("hello")))
