@@ -7,7 +7,7 @@ Everything runs on a single MacBook using [MLX](https://github.com/ml-explore/ml
 ## Roadmap
 
 - [x] Tiny GPT from scratch
-- [ ] Run a real open model locally
+- [x] Run a real open model locally
 - [ ] LoRA fine-tune with before/after evals
 - [ ] Agent harness (tools, memory, agent loop)
 - [ ] UI and release
@@ -59,6 +59,18 @@ Nurse:
 Why so-heart, I merry age greelized: yet you common me
 too this death.
 ```
+
+## Local chat
+
+`chat.py` is a terminal chat loop around Qwen3 8B (4-bit) running through `mlx-lm`. It keeps the conversation history, applies the model's chat template, and streams the reply as it is generated.
+
+On an M1 MacBook Pro it runs at about 50 tokens per second and peaks under 5 GB of memory.
+
+```
+python chat.py
+```
+
+The first run downloads the model (about 5 GB).
 
 ## Run it
 
