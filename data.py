@@ -9,7 +9,7 @@ n = int(0.9 * len(data))
 train_data = data[:n]
 val_data = data[n:]
 
-block_size = 4   # how many characters the model sees at once
+block_size = 64   # how many characters the model sees at once
 batch_size = 32   # how many examples it studies at a time
 
 def get_batch(split):
