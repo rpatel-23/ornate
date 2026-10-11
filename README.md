@@ -28,7 +28,9 @@ Full numbers and caveats are in [EVALS.md](EVALS.md).
 | Agent loop with a Python tool | `harness.py`, `agent.py` | Done |
 | File attachments (text and PDF) | `files.py` | Done |
 | Math evals with saved transcripts | `eval_math.py`, `eval_hard.py`, `results/` | Done |
-| Skills and memory | | Next |
+| Skills, with one written so far | `skills/`, `agent.py` | Started |
+| Optional thinking mode | `harness.py` | Done |
+| Memory | | Next |
 | Fine-tuning with before/after evals | | Planned |
 | Desktop app | | Planned |
 
@@ -50,7 +52,16 @@ The first run downloads Qwen3 30B-A3B (17 GB, needs about 17 GB of memory). For 
 ORNATE_MODEL=mlx-community/Qwen3-8B-4bit python agent.py
 ```
 
-In the chat, `/file <path>` attaches a text file or PDF to your next message, and `q` quits.
+In the chat:
+
+| Command | What it does |
+|---|---|
+| `/file <path>` | Attaches a text file or PDF to your next message |
+| `/skills` | Lists the available skills |
+| `/skill <name>` | Loads a skill's instructions into the chat |
+| `q` | Quits |
+
+To let the model reason before it answers, start it with `ORNATE_THINK=1 python agent.py`. It is slower, and the reasoning is hidden behind a `(thinking)` marker.
 
 Other entry points:
 
@@ -91,9 +102,29 @@ Why so-heart, I merry age greelized: yet you common me
 too this death.
 ```
 
+### Skills
+
+A skill is a Markdown file of instructions in `skills/`. `/skill <name>` adds that file to the system prompt for the rest of the chat, so the model follows a specific playbook for one kind of task without any fine-tuning.
+
+The first one, `missed-question`, explains a practice question I got wrong in a fixed format: correct answer, my answer, the skill tested, the method, the exact slip, a miss type, a rule to remember, and a Desmos check. The format comes from how I already review SAT practice.
+
+Getting it to name the slip took four tries on one test problem ($40 shirt, 25% off, then 10% tax, wrong answer $26):
+
+| Version | What it said the slip was |
+|---|---|
+| First draft | "You may have calculated the discount incorrectly or skipped the tax" |
+| Told to test wrong methods in code | A path that gives $27 |
+| Told to write out the wrong calculation | A path that gives $34, published anyway |
+| Same skill with thinking mode on | Adding 25% and 10% and taking 35% off: $40 - $14 = $26 |
+
+Two things caused the early failures. The skill told the model to run tests first and also to output nothing but the final block, so it skipped the tests. And working backward from a wrong answer needs room to try ideas and throw them out, which the model only had with thinking on.
+
+This is one problem, run several times, so it shows the skill can work and not how often it does. A small test set for it is the next step.
+
 ## Limits
 
 - The evals are small (45 to 50 problems) and only cover math. Gaps of one or two questions are not meaningful.
+- The skill has been checked on a single example, and skills have to be loaded by hand for now.
 - An 8B to 30B local model is well below frontier models, especially on long multi-step tasks.
 - Nothing is fine-tuned yet. The models are stock Qwen3 weights from [mlx-community](https://huggingface.co/mlx-community).
 
