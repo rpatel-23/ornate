@@ -7,7 +7,7 @@ from mlx_lm import load, stream_generate
 
 import os
 
-MODEL = os.environ.get("ORNATE_MODEL", "mlx-community/Qwen3-8B-4bit")
+MODEL = os.environ.get("ORNATE_MODEL", "mlx-community/Qwen3-30B-A3B-4bit")
 print("loading", MODEL)
 model, tokenizer = load(MODEL)
 
