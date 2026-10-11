@@ -72,6 +72,32 @@ python chat.py
 
 The first run downloads the model (about 5 GB).
 
+## Agent with a Python tool
+
+`harness.py` holds the agent loop. The model is told a `run_python` tool exists. When it replies with a tool call, the harness runs the code in a separate process, sends the output back, and lets the model continue, for up to five rounds per question. `agent.py` is the chat version.
+
+```
+python agent.py
+```
+
+The tool runs model-written code directly on the machine with a 10-second timeout. It is not sandboxed yet.
+
+### First math eval
+
+`eval_math.py` asks 20 calculation questions twice, once with no tools and once with the Python tool, and grades only the final `ANSWER:` line.
+
+| Setup | Correct |
+|---|---|
+| No tools | 18/20 |
+| Python tool | 19/20 |
+
+A one-question gap on 20 questions is too small to mean anything, so this does not show that the tool improves accuracy. What it does show is that the two setups fail differently:
+
+- Without tools, the model slipped a digit in a long multiplication, and on a remainder question it stated a made-up answer while describing work it never did.
+- With the tool, both of those were fixed, but it wrote buggy code for a prime-counting question and reported the wrong output (198 primes below 200) without noticing it was impossible.
+
+An earlier version of the grader accepted the right number anywhere in the reply and scored both setups 19/20, hiding the no-tools failures. Next step is a larger, harder problem set with saved transcripts.
+
 ## Run it
 
 ```
