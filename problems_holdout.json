@@ -1,0 +1,182 @@
+[
+  {
+    "question": "How many integers from 1 to 5000 are divisible by 3 or by 7, but not by 5?",
+    "answer": 1714
+  },
+  {
+    "question": "What is the sum of all prime numbers less than 5000?",
+    "answer": 1548136
+  },
+  {
+    "question": "How many four-digit positive integers have digits that add up to 18?",
+    "answer": 615
+  },
+  {
+    "question": "What is the smallest positive integer n such that n factorial ends in at least 40 zeros?",
+    "answer": 165
+  },
+  {
+    "question": "In how many ways can you make exactly one dollar using any number of pennies, nickels, dimes, and quarters?",
+    "answer": 242
+  },
+  {
+    "question": "How many positive integers up to 100000 are perfect squares or perfect cubes?",
+    "answer": 356
+  },
+  {
+    "question": "The Fibonacci sequence starts 1, 1, 2, 3, 5. What is its 50th term?",
+    "answer": 12586269025
+  },
+  {
+    "question": "What is the remainder when 3^1000 is divided by 1009?",
+    "answer": 404
+  },
+  {
+    "question": "What is the sum of the distinct prime factors of 600851475143?",
+    "answer": 9238
+  },
+  {
+    "question": "A $25000 loan has a 6% annual interest rate compounded monthly and is repaid with equal monthly payments over 5 years. What is the monthly payment in dollars, rounded to two decimal places?",
+    "answer": 483.32
+  },
+  {
+    "question": "You deposit $200 at the end of every month into an account earning 5% annual interest compounded monthly. What is the balance after 10 years, rounded to the nearest dollar?",
+    "answer": 31056
+  },
+  {
+    "question": "Three cards are drawn without replacement from a standard 52-card deck. What is the probability that all three are the same suit, as a decimal rounded to four places?",
+    "answer": 0.0518
+  },
+  {
+    "question": "In a group of 23 people, what is the probability that at least two share a birthday, assuming 365 equally likely days? Give a decimal rounded to four places.",
+    "answer": 0.5073
+  },
+  {
+    "question": "Four fair six-sided dice are rolled. What is the probability that the sum is 14, as a decimal rounded to four places?",
+    "answer": 0.1127
+  },
+  {
+    "question": "On average, how many rolls of a fair six-sided die does it take to see every face at least once? Round to two decimal places.",
+    "answer": 14.7
+  },
+  {
+    "question": "A 20-question multiple choice test has 4 choices per question. If a student guesses every answer, what is the probability of getting at least 8 correct, as a decimal rounded to four places?",
+    "answer": 0.1018
+  },
+  {
+    "question": "What is the area of the triangle with vertices (1, 2), (7, 10), and (13, -3)?",
+    "answer": 63
+  },
+  {
+    "question": "What is the distance from the point (5, -2) to the line 3x - 4y + 7 = 0?",
+    "answer": 6
+  },
+  {
+    "question": "What is the area of a regular hexagon with side length 10, rounded to two decimal places?",
+    "answer": 259.81
+  },
+  {
+    "question": "A sphere is inscribed in a cube with side length 12. What is the volume of the space inside the cube but outside the sphere, rounded to two decimal places?",
+    "answer": 823.22
+  },
+  {
+    "question": "What is the radius of the circle that passes through the points (0, 0), (6, 0), and (0, 8)?",
+    "answer": 5
+  },
+  {
+    "question": "A triangle has side lengths 7, 10, and 12. What is its largest angle in degrees, rounded to two decimal places?",
+    "answer": 87.95
+  },
+  {
+    "question": "What is the sum of the cubes of the integers from 1 to 40?",
+    "answer": 672400
+  },
+  {
+    "question": "A sequence is defined by a_n = 3n^2 - 2n + 1. What is the sum of its first 30 terms?",
+    "answer": 27465
+  },
+  {
+    "question": "The equation x^3 - 6x^2 + 11x - 6 = 0 has three real roots. What is the sum of the squares of the roots?",
+    "answer": 14
+  },
+  {
+    "question": "If x + y + z = 30, 2x - y + z = 17, and x + 2y - 3z = -25, what is z - x?",
+    "answer": 11
+  },
+  {
+    "question": "What is the sample standard deviation of 12, 15, 18, 22, 22, 25, 29, 31, 35, 41, rounded to two decimal places?",
+    "answer": 9.09
+  },
+  {
+    "question": "What is the slope of the least-squares regression line for the points (1, 2), (2, 3), (3, 5), (4, 4), (5, 6)?",
+    "answer": 0.9
+  },
+  {
+    "question": "For a standard normal variable Z, what is the probability that Z is less than 1.25, as a decimal rounded to four places?",
+    "answer": 0.8944
+  },
+  {
+    "question": "Worker A can finish a job alone in 12 hours, B in 15 hours, and C in 20 hours. A and B work together for 3 hours, then C joins them. How many hours does the whole job take from start to finish?",
+    "answer": 5.75
+  },
+  {
+    "question": "How many liters of a 90% acid solution must be added to 40 liters of a 30% acid solution to make a 50% acid solution?",
+    "answer": 20
+  },
+  {
+    "question": "Two trains start 420 miles apart and travel toward each other. The first travels at 55 mph. The second leaves one hour after the first and travels at 65 mph. How many hours after the first train leaves do they meet, rounded to two decimal places?",
+    "answer": 4.04
+  },
+  {
+    "question": "$1000 is invested at 7% interest compounded annually. After how many whole years does the balance first exceed $5000?",
+    "answer": 24
+  },
+  {
+    "question": "How many positive integers less than 1000 share no common factor greater than 1 with 1000?",
+    "answer": 400
+  },
+  {
+    "question": "How many digits does 2^1000 have?",
+    "answer": 302
+  },
+  {
+    "question": "What is the sum of the digits of 100 factorial?",
+    "answer": 648
+  },
+  {
+    "question": "How many paths go from (0, 0) to (8, 8) using only steps right or up, never going above the line y = x?",
+    "answer": 1430
+  },
+  {
+    "question": "In how many ways can 8 people each take a coat from a pile of their 8 coats so that nobody gets their own coat?",
+    "answer": 14833
+  },
+  {
+    "question": "How many 5-letter strings using only the letters A, B, C, D, E (repeats allowed) contain at least one A?",
+    "answer": 2101
+  },
+  {
+    "question": "What is the largest prime factor of 2^32 + 1?",
+    "answer": 6700417
+  },
+  {
+    "question": "Start with 27. If the number is even, halve it; if odd, triple it and add 1. How many steps does it take to reach 1?",
+    "answer": 111
+  },
+  {
+    "question": "How many integers from 1 to 1000000 have digits that add up to 20?",
+    "answer": 35127
+  },
+  {
+    "question": "A ball's height in feet after t seconds is h(t) = -16t^2 + 72t + 40. What is its maximum height?",
+    "answer": 121
+  },
+  {
+    "question": "What is the sum of all odd numbers between 100 and 1000 that are divisible by 9?",
+    "answer": 27900
+  },
+  {
+    "question": "How many ways can 10 identical candies be given to 4 children if every child gets at least one?",
+    "answer": 84
+  }
+]

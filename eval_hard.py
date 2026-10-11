@@ -1,10 +1,23 @@
+import argparse
 import json
 import os
 import re
 import time
+
+# options, so one script covers every experiment
+parser = argparse.ArgumentParser()
+parser.add_argument("--problems", default="problems_hard.json", help="which problem file to use")
+parser.add_argument("--mode", choices=["both", "tools", "no_tools"], default="both")
+parser.add_argument("--prompt", choices=["reason", "simple"], default="reason", help="which tool prompt to test")
+args = parser.parse_args()
+
 from harness import respond, SYSTEM, SYSTEM_TOOLS, MODEL
 
-with open("problems_hard.json") as f:
+# the original one-line tool prompt, kept so old and new can be compared
+SIMPLE_TOOLS = SYSTEM + " For any calculation, use the run_python tool."
+TOOL_PROMPT = SYSTEM_TOOLS if args.prompt == "reason" else SIMPLE_TOOLS
+
+with open(args.problems) as f:
     PROBLEMS = json.load(f)
 
 def is_correct(reply, expected):
@@ -20,10 +33,12 @@ def is_correct(reply, expected):
         value = float(top) / float(bottom)
     else:
         value = float(text)
-    return abs(value - expected) <= 0.01
+    # small answers like probabilities need a tighter match than big ones
+    tolerance = 0.01 if abs(expected) >= 1 else 0.0001
+    return abs(value - expected) <= tolerance
 
 def run(use_tools):
-    system = SYSTEM_TOOLS if use_tools else SYSTEM
+    system = TOOL_PROMPT if use_tools else SYSTEM
     score = 0
     records = []
     for p in PROBLEMS:
@@ -41,20 +56,22 @@ def run(use_tools):
         records.append({"question": p["question"], "expected": p["answer"], "correct": ok, "messages": messages[1:]})
     return score, records
 
-results = {"model": MODEL}
-for name, use_tools in [("no_tools", False), ("python_tool", True)]:
+runs = {"both": ["no_tools", "python_tool"], "tools": ["python_tool"], "no_tools": ["no_tools"]}[args.mode]
+results = {"model": MODEL, "problems": args.problems, "prompt": args.prompt}
+for name in runs:
     print(f"\n=== {name} ===")
     start = time.time()
-    score, records = run(use_tools)
+    score, records = run(use_tools=(name == "python_tool"))
     results[name] = {"score": score, "total": len(PROBLEMS), "seconds": round(time.time() - start), "records": records}
 
 os.makedirs("results", exist_ok=True)
-path = "results/" + MODEL.split("/")[-1] + ".json"
+set_name = os.path.basename(args.problems).replace(".json", "")
+path = f"results/{MODEL.split('/')[-1]}__{set_name}__{args.prompt}.json"
 with open(path, "w") as f:
     json.dump(results, f, indent=2)
 
-print("\nmodel:", MODEL)
-for name in ("no_tools", "python_tool"):
+print(f"\nmodel: {MODEL} | problems: {args.problems} | tool prompt: {args.prompt}")
+for name in runs:
     r = results[name]
     print(f"{name}: {r['score']}/{r['total']} in {r['seconds']}s")
 print("transcripts saved to", path)
