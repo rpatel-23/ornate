@@ -119,12 +119,23 @@ Getting it to name the slip took four tries on one test problem ($40 shirt, 25% 
 
 Two things caused the early failures. The skill told the model to run tests first and also to output nothing but the final block, so it skipped the tests. And working backward from a wrong answer needs room to try ideas and throw them out, which the model only had with thinking on.
 
-This is one problem, run several times, so it shows the skill can work and not how often it does. A small test set for it is the next step.
+That was one problem run several times, so I tested the skill on 9 new missed questions, each with a wrong answer that comes from a known mistake (`eval_skill.py`, `problems_slips.json`). There is no automatic grader for "did it name the right mistake," so each answer was read and judged by hand.
+
+| Thinking | Found the slip |
+|---|---|
+| Off | 6 of 9, plus 1 partial |
+| On | 8 of 9, plus 1 that named a different mistake that also produces the wrong answer |
+
+Thinking mode fixed both clear misses and broke none of the ones that already worked. With it off, the model would describe a mistake that leads to a different number than the one I put (a path to 67 for an answer of 28) and not notice.
+
+Two flaws this test showed in my own work: one problem had two different mistakes that give the same wrong answer, so it could not tell them apart, and my script hid a correct answer because the model never closed its thinking tag.
+
+Nine problems, graded by reading, is enough to turn thinking on for this skill and not enough to quote a percentage.
 
 ## Limits
 
 - The evals are small (45 to 50 problems) and only cover math. Gaps of one or two questions are not meaningful.
-- The skill has been checked on a single example, and skills have to be loaded by hand for now.
+- The skill has been checked on 9 hand-graded problems, and skills have to be loaded by hand for now.
 - An 8B to 30B local model is well below frontier models, especially on long multi-step tasks.
 - Nothing is fine-tuned yet. The models are stock Qwen3 weights from [mlx-community](https://huggingface.co/mlx-community).
 
