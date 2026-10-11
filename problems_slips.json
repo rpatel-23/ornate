@@ -1,0 +1,11 @@
+[
+  {"question": "If 4x - 6 = 18, what is 2x + 1?", "correct": "13", "wrong": "6", "slip": "Solved for x (x = 6) and stopped instead of computing 2x + 1."},
+  {"question": "A circle has a diameter of 10. What is its area? Use 3.14 for pi.", "correct": "78.5", "wrong": "314", "slip": "Used the diameter as the radius: 3.14 x 10^2 = 314."},
+  {"question": "The mean of five numbers is 13. Four of the numbers are 10, 15, 9, and 14. What is the fifth number?", "correct": "17", "wrong": "12", "slip": "Averaged the four given numbers (48 / 4 = 12) instead of using total = 5 x 13 = 65."},
+  {"question": "A stock starts at $50, rises 20%, then falls 20%. What is the final price?", "correct": "48", "wrong": "$50", "slip": "Assumed +20% and -20% cancel out, so the price returns to 50."},
+  {"question": "Solve for x: -3(x - 4) = 2x + 2.", "correct": "2", "wrong": "-2.8", "slip": "Distributed -3 as -3x - 12 instead of -3x + 12, giving -14 = 5x."},
+  {"question": "A car travels 60 miles at 30 mph, then another 60 miles at 60 mph. What is its average speed for the whole trip?", "correct": "40", "wrong": "45 mph", "slip": "Averaged the two speeds, (30 + 60) / 2 = 45, instead of total distance / total time."},
+  {"question": "What is 3 + 4 x 2^2?", "correct": "19", "wrong": "28", "slip": "Added before multiplying: (3 + 4) x 4 = 28."},
+  {"question": "A bag has 3 red and 5 blue marbles. Two marbles are drawn without replacement. What is the probability that both are red?", "correct": "3/28", "wrong": "9/64", "slip": "Treated the draws as with replacement: (3/8) x (3/8) = 9/64."},
+  {"question": "A radio station asks listeners to call in and vote on a new law, then reports the results. What type of bias is most clearly present?", "correct": "voluntary response bias", "wrong": "undercoverage", "slip": "Mixed up who is left out of the sampling frame (undercoverage) with people choosing whether to respond (voluntary response)."}
+]

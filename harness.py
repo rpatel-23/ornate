@@ -76,6 +76,9 @@ def ask_model(messages, use_tools, show):
             print(visible[shown:], end="", flush=True)
             shown = len(visible)
     if show:
+        if "<think>" in reply and "</think>" not in reply:
+        # the model never closed its thinking, so show what it wrote
+            print(reply.split("<think>")[-1].strip(), end="")
         print()
     return reply
 
