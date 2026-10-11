@@ -4,6 +4,8 @@ A local AI assistant that runs entirely on a MacBook. It chats, reads files I at
 
 Runs on Apple Silicon with [MLX](https://github.com/ml-explore/mlx). No cloud, no API keys.
 
+Built and tested on a MacBook Pro with an Apple M1 Max and 64 GB of memory, macOS 26.6.2. All speeds and timings in this repo come from that machine.
+
 ![Ornate reading an attached PDF, then using its Python tool for a calculation](demo.png)
 
 One session: a question answered from an attached PDF, then a calculation it hands to the Python tool.

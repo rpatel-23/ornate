@@ -1,6 +1,6 @@
 # Evals
 
-All runs use 4-bit Qwen3 models through `mlx-lm` on an M1 MacBook Pro with thinking mode off. Each question gets a fresh conversation. The grader reads only the final `ANSWER:` line. Full transcripts are in `results/`.
+All runs use 4-bit Qwen3 models through `mlx-lm` on a MacBook Pro (Apple M1 Max, 64 GB memory, macOS 26.6.2) with thinking mode off. Each question gets a fresh conversation. The grader reads only the final `ANSWER:` line. Full transcripts are in `results/`.
 
 The models pick the most likely token every time, so the same question always gives the same answer. Rerunning does not add information.
 
