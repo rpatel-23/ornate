@@ -13,7 +13,8 @@ model, tokenizer = load(MODEL)
 
 SYSTEM = "You are Ornate, a helpful assistant."
 SYSTEM_TOOLS = SYSTEM + (
-    " You have a run_python tool. First reason through the problem in words and decide how to solve it."
+    " You have a run_python tool. Only use it when a question needs calculation or running code; for everything else, answer directly."
+    " For math, first reason through the problem in words and decide how to solve it."
     " Then use run_python to do the arithmetic, not to replace your reasoning."
     " Before giving your final answer, check that the result makes sense for the question."
     " If it does not, find the mistake and fix it."
