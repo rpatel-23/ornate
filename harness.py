@@ -8,6 +8,7 @@ from mlx_lm import load, stream_generate
 import os
 
 MODEL = os.environ.get("ORNATE_MODEL", "mlx-community/Qwen3-30B-A3B-4bit")
+THINK = os.environ.get("ORNATE_THINK") == "1"
 print("loading", MODEL)
 model, tokenizer = load(MODEL)
 
@@ -61,13 +62,19 @@ def ask_model(messages, use_tools, show):
         messages,
         tools=TOOLS if use_tools else None,
         add_generation_prompt=True,
-        enable_thinking=False,
+        enable_thinking=THINK,
     )
     reply = ""
-    for chunk in stream_generate(model, tokenizer, prompt=prompt, max_tokens=2000):
-        if show:
-            print(chunk.text, end="", flush=True)
+    shown = 0
+    for chunk in stream_generate(model, tokenizer, prompt=prompt, max_tokens=4000):
         reply += chunk.text
+        if show:
+            # hide everything between <think> and </think>, print only what's new
+            visible = re.sub(r"<think>.*?(</think>|$)", "(thinking) ", reply, flags=re.DOTALL)
+            if "<think>" in reply and "</think>" not in reply:
+                continue
+            print(visible[shown:], end="", flush=True)
+            shown = len(visible)
     if show:
         print()
     return reply
