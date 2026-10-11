@@ -26,11 +26,19 @@ PROBLEMS = [
 ]
 
 def is_correct(reply, expected):
-    # only grade the final ANSWER line, not numbers in the work
-    found = re.findall(r"ANSWER:\**\s*\$?\s*(-?[\d,]*\.?\d+)", reply)
+    # only grade the final ANSWER line; accepts 1.5, 1,500, -11, and fractions like 3/2
+    found = re.findall(r"ANSWER:\**\s*\$?\s*(-?[\d,]*\.?\d+(?:\s*/\s*\d*\.?\d+)?)", reply)
     if not found:
         return False
-    return abs(float(found[-1].replace(",", "")) - expected) <= 0.01
+    text = found[-1].replace(",", "").replace(" ", "")
+    if "/" in text:
+        top, bottom = text.split("/")
+        if float(bottom) == 0:
+            return False
+        value = float(top) / float(bottom)
+    else:
+        value = float(text)
+    return abs(value - expected) <= 0.01
 
 def run(use_tools):
     system = SYSTEM_TOOLS if use_tools else SYSTEM

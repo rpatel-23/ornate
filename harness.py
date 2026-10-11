@@ -1,10 +1,15 @@
+import ast
 import json
 import re
 import subprocess
 import sys
 from mlx_lm import load, stream_generate
 
-model, tokenizer = load("mlx-community/Qwen3-8B-4bit")
+import os
+
+MODEL = os.environ.get("ORNATE_MODEL", "mlx-community/Qwen3-8B-4bit")
+print("loading", MODEL)
+model, tokenizer = load(MODEL)
 
 SYSTEM = "You are Ornate, a helpful assistant."
 SYSTEM_TOOLS = SYSTEM + " For any calculation, use the run_python tool."
@@ -24,15 +29,27 @@ TOOLS = [{
     },
 }]
 
+def print_last_value(code):
+    # models often end with a bare value like a notebook cell; make that print
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return code
+    if not tree.body or not isinstance(tree.body[-1], ast.Expr):
+        return code
+    last = ast.unparse(tree.body[-1].value)
+    rest = ast.unparse(ast.Module(body=tree.body[:-1], type_ignores=[]))
+    return rest + f"\n_last = {last}\nif _last is not None:\n    print(_last)"
+
 def run_python(code):
     try:
         result = subprocess.run(
-            [sys.executable, "-c", code], capture_output=True, text=True, timeout=10
+            [sys.executable, "-c", print_last_value(code)], capture_output=True, text=True, timeout=10
         )
-        return (result.stdout + result.stderr).strip() or "(no output)"
+        return (result.stdout + result.stderr).strip() or "(no output. Use print() to show the result.)"
     except subprocess.TimeoutExpired:
         return "Error: code took longer than 10 seconds"
-
+    
 def ask_model(messages, use_tools, show):
     prompt = tokenizer.apply_chat_template(
         messages,

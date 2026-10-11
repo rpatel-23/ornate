@@ -1,0 +1,202 @@
+[
+  {
+    "question": "A store marks a $240 jacket up by 35%, then takes 20% off the new price. What is the final price in dollars?",
+    "answer": 259.2
+  },
+  {
+    "question": "A car travels 150 miles at 50 mph and then another 150 miles at 75 mph. What is its average speed for the whole trip in mph?",
+    "answer": 60
+  },
+  {
+    "question": "One pipe fills a tank in 6 hours and another fills it in 9 hours. Working together, how many hours do they take to fill the tank?",
+    "answer": 3.6
+  },
+  {
+    "question": "The sum of three consecutive odd integers is 2025. What is the largest of the three?",
+    "answer": 677
+  },
+  {
+    "question": "A rectangle's length is 7 more than twice its width, and its perimeter is 146. What is its area?",
+    "answer": 1122
+  },
+  {
+    "question": "If 3x + 4y = 65 and 5x - 2y = 39, what is x + y?",
+    "answer": 19
+  },
+  {
+    "question": "Let f(x) = 3x^2 - 5x + 2. What is f(7) - f(-4)?",
+    "answer": 44
+  },
+  {
+    "question": "What is the positive solution of x^2 - 14x - 51 = 0?",
+    "answer": 17
+  },
+  {
+    "question": "If 2^(x+3) = 1024, what is x?",
+    "answer": 7
+  },
+  {
+    "question": "A town of 8000 people grows by 6% each year. What is its population after 5 years, rounded to the nearest whole number?",
+    "answer": 10706
+  },
+  {
+    "question": "What is the y-intercept of the line through the points (2, -5) and (8, 13)?",
+    "answer": -11
+  },
+  {
+    "question": "An arithmetic sequence has first term 7 and common difference 4. What is the sum of its first 60 terms?",
+    "answer": 7500
+  },
+  {
+    "question": "A geometric sequence has first term 3 and common ratio 2. What is the sum of its first 15 terms?",
+    "answer": 98301
+  },
+  {
+    "question": "30 liters of a 20% salt solution are mixed with 50 liters of a 60% salt solution. What is the percent concentration of the mixture?",
+    "answer": 45
+  },
+  {
+    "question": "A worker earns $18.50 per hour for the first 40 hours in a week and 1.5 times that rate for overtime. How many dollars does she earn in a 52-hour week?",
+    "answer": 1073
+  },
+  {
+    "question": "What is the area of a triangle with side lengths 13, 14, and 15?",
+    "answer": 84
+  },
+  {
+    "question": "What is the volume of a cone with radius 6 and height 14, rounded to two decimal places?",
+    "answer": 527.79
+  },
+  {
+    "question": "What is the length of the space diagonal of a rectangular box that measures 12 by 16 by 21?",
+    "answer": 29
+  },
+  {
+    "question": "What is the measure in degrees of each interior angle of a regular 15-sided polygon?",
+    "answer": 156
+  },
+  {
+    "question": "What is the area of a sector with radius 12 and central angle 75 degrees, rounded to two decimal places?",
+    "answer": 94.25
+  },
+  {
+    "question": "A 25-foot ladder leans against a wall with its base 7 feet from the wall. If the base slides 8 feet farther from the wall, how many feet does the top of the ladder slide down?",
+    "answer": 4
+  },
+  {
+    "question": "A right triangle has legs of length 20 and 21. What is the length of the altitude to the hypotenuse, rounded to two decimal places?",
+    "answer": 14.48
+  },
+  {
+    "question": "How many diagonals does a 30-sided polygon have?",
+    "answer": 405
+  },
+  {
+    "question": "What is the radius of the circle x^2 + y^2 - 10x + 6y - 15 = 0?",
+    "answer": 7
+  },
+  {
+    "question": "What is the population standard deviation of 4, 8, 15, 16, 23, 42, rounded to two decimal places?",
+    "answer": 12.32
+  },
+  {
+    "question": "What is the median of 31, 7, 19, 44, 12, 28, 3, 36?",
+    "answer": 23.5
+  },
+  {
+    "question": "Two fair six-sided dice are rolled. What is the probability that the sum is 8, as a decimal rounded to four places?",
+    "answer": 0.1389
+  },
+  {
+    "question": "How many 5-card hands from a standard 52-card deck contain exactly 2 aces?",
+    "answer": 103776
+  },
+  {
+    "question": "A fair coin is flipped 10 times. What is the probability of exactly 6 heads, as a decimal rounded to four places?",
+    "answer": 0.2051
+  },
+  {
+    "question": "A class has 12 boys and 15 girls. How many ways can a committee of 4 be chosen with exactly 2 boys?",
+    "answer": 6930
+  },
+  {
+    "question": "A course grade is 40% tests, 25% homework, and 35% final exam. A student scores 82 on tests, 94 on homework, and 76 on the final. What is the course grade?",
+    "answer": 82.9
+  },
+  {
+    "question": "A data set has Q1 = 34 and Q3 = 58. Using the 1.5 x IQR rule, what is the upper fence for outliers?",
+    "answer": 94
+  },
+  {
+    "question": "A game pays $50 with probability 0.1 and $10 with probability 0.3. Otherwise you lose $8. What is the expected value of one play in dollars?",
+    "answer": 3.2
+  },
+  {
+    "question": "How many distinct arrangements are there of the letters in MISSISSIPPI?",
+    "answer": 34650
+  },
+  {
+    "question": "What is the sum of all multiples of 7 between 1 and 1000?",
+    "answer": 71071
+  },
+  {
+    "question": "What is the least common multiple of 84, 126, and 220?",
+    "answer": 13860
+  },
+  {
+    "question": "How many positive divisors does 5040 have?",
+    "answer": 60
+  },
+  {
+    "question": "What are the last three digits of 7^222, written as a number?",
+    "answer": 49
+  },
+  {
+    "question": "What is the 1000th prime number?",
+    "answer": 7919
+  },
+  {
+    "question": "What is the sum of the digits of 2^100?",
+    "answer": 115
+  },
+  {
+    "question": "How many integers from 1 to 10000 are divisible by neither 6 nor 15?",
+    "answer": 8001
+  },
+  {
+    "question": "What is the binary number 1011011101 in decimal?",
+    "answer": 733
+  },
+  {
+    "question": "How many trailing zeros does 250 factorial have?",
+    "answer": 62
+  },
+  {
+    "question": "$12000 is borrowed at 5% annual interest compounded monthly, with no payments made. How much is owed after 3 years, rounded to the nearest dollar?",
+    "answer": 13938
+  },
+  {
+    "question": "A $32000 car loses 18% of its value each year. What is it worth after 6 years, rounded to the nearest dollar?",
+    "answer": 9728
+  },
+  {
+    "question": "What is 90 kilometers per hour in meters per second?",
+    "answer": 25
+  },
+  {
+    "question": "A runner finishes 10 kilometers in 47 minutes 30 seconds. What is the average pace in seconds per kilometer?",
+    "answer": 285
+  },
+  {
+    "question": "Train A leaves a station at 60 mph. Train B leaves the same station 2 hours later on the same track at 84 mph. How many hours after Train B leaves does it catch Train A?",
+    "answer": 5
+  },
+  {
+    "question": "What is 98.6 degrees Fahrenheit in degrees Celsius?",
+    "answer": 37
+  },
+  {
+    "question": "The graphs of y = x^2 - 4x + 1 and y = 2x - 4 intersect at two points. What is the sum of their x-coordinates?",
+    "answer": 6
+  }
+]
