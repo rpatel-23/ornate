@@ -88,4 +88,7 @@ def respond(messages, use_tools=True, show=True):
         if show:
             print(f"\n[tool output] {output}\n")
         messages.append({"role": "tool", "content": output})
+    if messages[-1]["role"] == "tool":
+        reply = ask_model(messages, False, show)
+        messages.append({"role": "assistant", "content": reply})
     return reply

@@ -96,7 +96,43 @@ A one-question gap on 20 questions is too small to mean anything, so this does n
 - Without tools, the model slipped a digit in a long multiplication, and on a remainder question it stated a made-up answer while describing work it never did.
 - With the tool, both of those were fixed, but it wrote buggy code for a prime-counting question and reported the wrong output (198 primes below 200) without noticing it was impossible.
 
-An earlier version of the grader accepted the right number anywhere in the reply and scored both setups 19/20, hiding the no-tools failures. Next step is a larger, harder problem set with saved transcripts.
+An earlier version of the grader accepted the right number anywhere in the reply and scored both setups 19/20, hiding the no-tools failures.
+
+### Harder eval and model comparison
+
+`eval_hard.py` runs 50 harder problems from `problems_hard.json` (word problems, geometry, statistics, probability, number theory). Every answer in the key was computed with code. Full transcripts are saved in `results/`.
+
+| Model (4-bit) | No tools | Python tool | Time for both runs |
+|---|---|---|---|
+| Qwen3 8B | 44/50 | 49/50 | about 9 min |
+| Qwen3 14B | 48/50 | 46/50 | about 17 min |
+| Qwen3 30B-A3B | 48/50 | 50/50 | about 9 min |
+
+What the transcripts showed:
+
+- **The tool was broken for one coding style.** Models often end their code with a bare variable, like a notebook cell. The tool ran it as a script, returned nothing, and the model retried until it ran out of rounds. Making the tool print a bare last value took the 8B from 45/50 to 49/50 and cut the run from 421s to 276s.
+- **A tool can make a stronger model worse.** The 14B scored lower with the tool than without it. Told to use Python for any calculation, it stopped reasoning, wrote quick wrong code, and reported impossible results (a 30 mph average for legs driven at 50 and 75 mph, an even number as an "odd integer").
+- **Bigger helps reasoning, not arithmetic.** The 14B and 30B still slip on long calculations by hand. The tool fixes those.
+- The 30B-A3B only activates about 3B of its parameters per token, so it runs as fast as the 8B. It is the model I use on the Mac.
+
+The 14B was run before `sympy` was installed and one of its four tool misses was that missing import, so its tool score is slightly understated.
+
+### Does a better tool prompt help? Held-out test
+
+I replaced the one-line tool prompt with one that tells the model to reason in words first, use code only for the arithmetic, and check that the result makes sense. On the 50 problems above, the 14B went from 46/50 to 50/50.
+
+That prompt was written after reading those exact failures, so I tested it on 45 new problems it had never been tuned against (`problems_holdout.json`), tool runs only:
+
+| Model | Old prompt | New prompt | Extra time |
+|---|---|---|---|
+| Qwen3 8B | 42/45 | 42/45 | +53% |
+| Qwen3 30B-A3B | 43/45 | 45/45 | +50% |
+
+On new problems the prompt did not clearly help. The 8B tied, fixing three problems and breaking three others. The 30B gained two, but one of those was a harness bug and not the prompt: with the old prompt it computed the right answer on its fifth tool call and was cut off by the round limit before it could reply. After I fixed the loop to give the model one last turn to answer, the old prompt scored 44/45, so the prompt's real gain on the 30B is one question. Most of the earlier gain came from fitting the prompt to the test.
+
+The remaining mistakes are off-by-one errors and formula mix-ups (355 instead of 356, the 49th Fibonacci number instead of the 50th) that look plausible, so a "does this make sense" check cannot catch them.
+
+Limits of all of this: the problem sets are small (45 to 50 questions), each model gives the same answer every run, and gaps of one or two questions are not meaningful.
 
 ## Run it
 
@@ -104,7 +140,7 @@ An earlier version of the grader accepted the right number anywhere in the reply
 git clone https://github.com/rpatel-23/ornate.git
 cd ornate
 python3 -m venv .venv && source .venv/bin/activate
-pip install mlx mlx-lm numpy
+pip install mlx mlx-lm numpy sympy
 python gpt.py
 ```
 
