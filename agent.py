@@ -1,3 +1,4 @@
+from quiz import run_quiz
 import os
 from harness import respond, SYSTEM_TOOLS
 from files import read_file
@@ -9,7 +10,18 @@ while True:
     user = input("\nyou: ")
     if user.strip().lower() in ("q", "quit"):
         break
-            # "/skills" lists the skills that exist
+
+    # "/quiz topic" or "/quiz 3 topic" runs a quiz; uses any attached file as the material
+    if user.startswith("/quiz "):
+        words = user[6:].split()
+        count = int(words.pop(0)) if words and words[0].isdigit() else 5
+        summary = run_quiz(" ".join(words), count, attached)
+        attached = ""
+        if summary:
+            messages.append({"role": "user", "content": summary})
+        continue
+
+    # "/skills" lists the skills that exist
     if user.strip() == "/skills":
         print("skills:", ", ".join(f[:-3] for f in os.listdir("skills") if f.endswith(".md")))
         continue
