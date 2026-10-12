@@ -75,9 +75,51 @@ The remaining mistakes look plausible, so a "does this make sense" check cannot 
 - A regression slope of 1.125 where the answer is 0.9 (mixed a sample covariance with a population variance)
 - A deposit counted at the start of each month where the problem said the end
 
+## 4. Skills and quizzes
+
+These are judged by reading the output, not by an automatic grader, because "did it name the right mistake" is a judgment call.
+
+### Missed-question skill
+
+Getting it to name the slip took four tries on one test problem ($40 shirt, 25% off, then 10% tax, wrong answer $26):
+
+| Version | What it said the slip was |
+|---|---|
+| First draft | "You may have calculated the discount incorrectly or skipped the tax" |
+| Told to test wrong methods in code | A path that gives $27 |
+| Told to write out the wrong calculation | A path that gives $34, published anyway |
+| Same skill with thinking mode on | Adding 25% and 10% and taking 35% off: $40 - $14 = $26 |
+
+Two things caused the early failures. The skill told the model to run tests first and also to output nothing but the final block, so it skipped the tests. And working backward from a wrong answer needs room to try ideas and throw them out, which the model only had with thinking on.
+
+That was one problem run several times, so I tested the skill on 9 new missed questions, each with a wrong answer that comes from a known mistake (`eval_skill.py`, `problems_slips.json`). There is no automatic grader for "did it name the right mistake," so each answer was read and judged by hand.
+
+| Thinking | Found the slip |
+|---|---|
+| Off | 6 of 9, plus 1 partial |
+| On | 8 of 9, plus 1 that named a different mistake that also produces the wrong answer |
+
+Thinking mode fixed both clear misses and broke none of the ones that already worked. With it off, the model would describe a mistake that leads to a different number than the one I put (a path to 67 for an answer of 28) and not notice.
+
+Two flaws this test showed in my own work: one problem had two different mistakes that give the same wrong answer, so it could not tell them apart, and my script hid a correct answer because the model never closed its thinking tag.
+
+Nine problems, graded by reading, is enough to turn thinking on for this skill and not enough to quote a percentage.
+
+### Quizzes: the model writes, code keeps score
+
+The first quiz skill asked the model to run the whole quiz itself. It showed all the questions at once, skipped feedback, and reported 1 of 3 correct when the answer was 0. Keeping score and taking turns is bookkeeping, and code does that perfectly while models do not.
+
+So `quiz.py` asks the model once for the questions as JSON (question, correct answer, three wrong answers, explanation, the tempting trap), then plain Python runs the quiz: one question at a time, shuffled choices, a running score, and a list of what was missed. The model can start a quiz on its own through a `start_quiz` tool, and the results are added to the chat so follow-up questions work.
+
+### Picking skills automatically
+
+On a first check, a missed-question message went straight to the Python tool and skipped the skill. Moving the skill check to the front of the system prompt fixed that. A second problem was that a loaded skill stayed in the conversation, so a later plain question ("what does photosynthesis produce?") came back in the missed-question format. Removing skill text after each answer fixed that.
+
+On four fresh messages in one chat (a missed fraction problem, a plain question, a quiz request, a plain question), the model chose correctly every time. That is a spot check, not a test; a routing test with marked answers is next. Style instructions such as "no emojis, no sign-offs" are still followed only loosely.
+
 ## Caveats
 
 - 45 to 50 problems per set. A gap of one or two questions is noise.
-- Only math. Nothing here measures explanation quality, coding, or reading files.
+- Sections 1 to 3 cover only math. Section 4 is hand-graded and small. Nothing here measures coding or reading files yet.
 - The tool prompt changed again after these runs, adding "only use the tool when a question needs calculation." The numbers above have not been rerun with that wording.
 - The grader requires an `ANSWER:` line. One 8B miss on the held-out set had the correct value but no answer line.
