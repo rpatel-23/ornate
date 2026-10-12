@@ -1,0 +1,133 @@
+{
+  "model": "mlx-community/Qwen3-30B-A3B-4bit",
+  "thinking": false,
+  "score": 18,
+  "records": [
+    {
+      "message": "If 5x + 3 = 28, what is 10x? I put 5.",
+      "expect": "missed-question",
+      "got": "missed-question",
+      "correct": true,
+      "reply": "<tool_call>\n{\"name\": \"load_skill\", \"arguments\": {\"name\": \"missed-question\"}}\n</tool_call>"
+    },
+    {
+      "message": "I got this wrong on my practice test: a 15% tip on a $40 meal. I said $4. Why is that wrong?",
+      "expect": "missed-question",
+      "got": "missed-question",
+      "correct": true,
+      "reply": "<tool_call>\n{\"name\": \"load_skill\", \"arguments\": {\"name\": \"missed-question\"}}\n</tool_call>"
+    },
+    {
+      "message": "my teacher marked my answer of 81 wrong for 3 to the power of 3. what did I mess up?",
+      "expect": "missed-question",
+      "got": "missed-question",
+      "correct": true,
+      "reply": "<tool_call>\n{\"name\": \"load_skill\", \"arguments\": {\"name\": \"missed-question\"}}\n</tool_call>"
+    },
+    {
+      "message": "Which amendment protects free speech? I answered the 2nd and it said incorrect.",
+      "expect": "missed-question",
+      "got": "missed-question",
+      "correct": true,
+      "reply": "<tool_call>\n{\"name\": \"load_skill\", \"arguments\": {\"name\": \"missed-question\"}}\n</tool_call>"
+    },
+    {
+      "message": "The mean of 4, 8, and 12 is what? I wrote 24 but the answer key says 8.",
+      "expect": "missed-question",
+      "got": "missed-question",
+      "correct": true,
+      "reply": "<tool_call>\n{\"name\": \"load_skill\", \"arguments\": {\"name\": \"missed-question\"}}\n</tool_call>"
+    },
+    {
+      "message": "quiz me on the causes of the American Revolution",
+      "expect": "quiz",
+      "got": "quiz",
+      "correct": true,
+      "reply": "<tool_call>\n{\"name\": \"start_quiz\", \"arguments\": {\"topic\": \"causes of the American Revolution\"}}\n</tool_call>"
+    },
+    {
+      "message": "can you give me 4 practice questions on cell organelles",
+      "expect": "quiz",
+      "got": "quiz",
+      "correct": true,
+      "reply": "<tool_call>\n{\"name\": \"start_quiz\", \"arguments\": {\"topic\": \"cell organelles\", \"count\": 4}}\n</tool_call>"
+    },
+    {
+      "message": "test me on z-scores, 3 questions",
+      "expect": "quiz",
+      "got": "quiz",
+      "correct": true,
+      "reply": "<tool_call>\n{\"name\": \"start_quiz\", \"arguments\": {\"topic\": \"z-scores\", \"count\": 3}}\n</tool_call>"
+    },
+    {
+      "message": "I have a vocab test tomorrow on SAT words, drill me",
+      "expect": "quiz",
+      "got": "quiz",
+      "correct": true,
+      "reply": "<tool_call>\n{\"name\": \"start_quiz\", \"arguments\": {\"topic\": \"SAT words\", \"count\": 5}}\n</tool_call>"
+    },
+    {
+      "message": "what is 17.5% of 2,348?",
+      "expect": "python",
+      "got": "python",
+      "correct": true,
+      "reply": "<tool_call>\n{\"name\": \"run_python\", \"arguments\": {\"code\": \"print(0.175 * 2348)\"}}\n</tool_call>"
+    },
+    {
+      "message": "If I invest $5,000 at 6% interest compounded monthly, how much do I have after 8 years?",
+      "expect": "python",
+      "got": "python",
+      "correct": true,
+      "reply": "<tool_call>\n{\"name\": \"run_python\", \"arguments\": {\"code\": \"import math\\n\\n# Principal amount\\nprincipal = 5000\\n\\n# Annual interest rate (as a decimal)\\nannual_rate = 0.06\\n\\n# Number of years\\nyears = 8\\n\\n# Number of times interest is compounded per year\\ncompounding_periods = 12\\n\\n# Calculate the total amount after compounding\\namount = principal * (1 + annual_rate / compounding_periods) ** (compounding_periods * years)\\n\\n# Print the result\\nprint(round(amount, 2))\"}}\n</tool_call>"
+    },
+    {
+      "message": "what is the standard deviation of 3, 7, 7, 19, 24?",
+      "expect": "python",
+      "got": "python",
+      "correct": true,
+      "reply": "<tool_call>\n{\"name\": \"run_python\", \"arguments\": {\"code\": \"import statistics\\n\\n# List of numbers\\nnumbers = [3, 7, 7, 19, 24]\\n\\n# Calculate the standard deviation\\nstd_dev = statistics.stdev(numbers)\\n\\n# Print the result\\nprint(std_dev)\"}}\n</tool_call>"
+    },
+    {
+      "message": "what does the mitochondria do?",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "reply": "The mitochondria is often referred to as the \"powerhouse of the cell\" because it generates most of the cell's supply of adenosine triphosphate (ATP), which is used as a source of chemical energy. It also plays a role in other processes such as signaling, cellular growth, and death."
+    },
+    {
+      "message": "who wrote the Federalist Papers?",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "reply": "The Federalist Papers were written by Alexander Hamilton, James Madison, and John Jay. They wrote these essays to promote the ratification of the United States Constitution."
+    },
+    {
+      "message": "I put my phone in rice after it got wet. will that fix it?",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "reply": "The rice method is not recommended for drying a wet phone. Rice can absorb some moisture, but it's not effective and can even damage your phone by leaving residue inside. Instead, turn off the phone immediately, remove any accessories, and let it air dry in a cool, dry place for at least 24-48 hours. If the phone still doesn't work, take it to a professional for repair."
+    },
+    {
+      "message": "explain the difference between weather and climate in two sentences",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "reply": "Weather refers to the short-term atmospheric conditions in a specific place at a specific time, while climate refers to the long-term patterns of temperature, precipitation, and other atmospheric conditions in a region. Weather can change hourly, while climate is determined over decades."
+    },
+    {
+      "message": "what's a good way to study for a history test?",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "reply": "A good way to study for a history test is to review key events, dates, and figures, and to practice explaining them in your own words. You can also use flashcards, create timelines, or take practice quizzes to reinforce your memory."
+    },
+    {
+      "message": "I got a 1410 on the SAT. is that a good score?",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "reply": "The SAT score of 1410 is considered a good score. It is above the national average and can make you competitive for many colleges. However, the definition of a \"good\" score can vary depending on the colleges you are applying to."
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+[
+  {"message": "If 5x + 3 = 28, what is 10x? I put 5.", "expect": "missed-question"},
+  {"message": "I got this wrong on my practice test: a 15% tip on a $40 meal. I said $4. Why is that wrong?", "expect": "missed-question"},
+  {"message": "my teacher marked my answer of 81 wrong for 3 to the power of 3. what did I mess up?", "expect": "missed-question"},
+  {"message": "Which amendment protects free speech? I answered the 2nd and it said incorrect.", "expect": "missed-question"},
+  {"message": "The mean of 4, 8, and 12 is what? I wrote 24 but the answer key says 8.", "expect": "missed-question"},
+  {"message": "quiz me on the causes of the American Revolution", "expect": "quiz"},
+  {"message": "can you give me 4 practice questions on cell organelles", "expect": "quiz"},
+  {"message": "test me on z-scores, 3 questions", "expect": "quiz"},
+  {"message": "I have a vocab test tomorrow on SAT words, drill me", "expect": "quiz"},
+  {"message": "what is 17.5% of 2,348?", "expect": "python"},
+  {"message": "If I invest $5,000 at 6% interest compounded monthly, how much do I have after 8 years?", "expect": "python"},
+  {"message": "what is the standard deviation of 3, 7, 7, 19, 24?", "expect": "python"},
+  {"message": "what does the mitochondria do?", "expect": "none"},
+  {"message": "who wrote the Federalist Papers?", "expect": "none"},
+  {"message": "I put my phone in rice after it got wet. will that fix it?", "expect": "none"},
+  {"message": "explain the difference between weather and climate in two sentences", "expect": "none"},
+  {"message": "what's a good way to study for a history test?", "expect": "none"},
+  {"message": "I got a 1410 on the SAT. is that a good score?", "expect": "none"}
+]
