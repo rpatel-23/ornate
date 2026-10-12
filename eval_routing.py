@@ -34,8 +34,10 @@ for t in tests:
     # only the model's first reply matters here, so no tools are actually run
     reply = ask_model(messages, use_tools=True, show=False)
     got = first_action(reply)
-    ok = got == t["expect"]
-    print("PASS" if ok else "FAIL", f"| expected {t['expect']:<16} got {got:<16} | {t['message']}")
+    # "expect" is one right answer, or a list when more than one first move is reasonable
+    allowed = t["expect"] if isinstance(t["expect"], list) else [t["expect"]]
+    ok = got in allowed
+    print("PASS" if ok else "FAIL", f"| expected {' or '.join(allowed):<22} got {got:<16} | {t['message']}")
     records.append({**t, "got": got, "correct": ok, "reply": reply})
 
 score = sum(r["correct"] for r in records)

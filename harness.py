@@ -106,7 +106,7 @@ def respond(messages, use_tools=True, show=True):
             name, output = "tool error", f"Error: bad tool call ({e})"
         if show:
             # show Python results in full, and just the first line of anything else
-            preview = output if name == "run_python" else (output.splitlines() or [""])[0]
+            preview = output if name in ("run_python", "web_search") else (output.splitlines() or [""])[0]
             print(f"\n[{name}] {preview}\n")
         messages.append({"role": "tool", "content": output})
     if messages[-1]["role"] == "tool":
