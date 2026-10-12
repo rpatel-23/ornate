@@ -6,7 +6,9 @@ Runs on Apple Silicon with [MLX](https://github.com/ml-explore/mlx). Everything 
 
 Built and tested on a MacBook Pro with an Apple M1 Max and 64 GB of memory, macOS 26.6.2. All speeds and timings in this repo come from that machine.
 
-![Ornate reading an attached PDF, then using its Python tool for a calculation](demo.png)
+![Ornate loading its missed-question skill, thinking, and naming the exact mistake behind a wrong answer of $26](demo.png)
+
+I put $26 on a discount-and-tax problem. Ornate picks the missed-question skill on its own, turns on thinking, and finds the exact mistake: both percentages taken off the original price, $40 - $10 - $4 = $26.
 
 ## What I found
 
