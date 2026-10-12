@@ -1,6 +1,6 @@
 # Ornate
 
-A local study assistant that runs on a MacBook. It explains practice questions I got wrong in the format I review with, quizzes me, reads files I attach, runs Python to check its math, and searches the web when it needs current information. The agent loop, skills, and evals are written from scratch with no agent framework, and the project started with a small GPT built by hand to understand what is inside the model.
+A local AI agent that runs entirely on a MacBook. It chats, runs Python to check its math, searches the web when it needs current information, reads files I attach, and loads skills on its own for specific jobs, such as working out exactly how I got a practice question wrong or running an interactive quiz. The agent loop, skills, and evals are written from scratch with no agent framework, and the project started with a small GPT built by hand to understand what is inside the model.
 
 Runs on Apple Silicon with [MLX](https://github.com/ml-explore/mlx). Everything runs offline except the optional web search, and nothing needs an API key.
 
