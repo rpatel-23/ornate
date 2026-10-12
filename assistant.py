@@ -93,8 +93,12 @@ SKILLS_NOTE = (
     + "\nWhen the user asks to be quizzed, call start_quiz. It runs the whole quiz with the user and returns the results, so never write quiz questions yourself."
     + "\nA skill applies only to the message that matched it. If a later message does not match a skill, ignore any skill instructions loaded earlier and answer normally."
     + "\nUse web_search for anything recent or any fact you are not sure of. When you read results: compare them against today's date and prefer the newest information, read every result before answering, and if results disagree or none answers the question directly, say so. Name the source you used. Do not search for things you know well, like basic math or definitions."
-    + "\n\nStyle: be concise. No emojis. No praise or sign-offs. Answer what was asked and do not add extra facts."
 )
 
 # the full system prompt used by the chat and by eval_routing.py
-SYSTEM_PROMPT = f"Today's date is {date.today():%B %d, %Y}.\n" + SYSTEM_TOOLS + SKILLS_NOTE
+def system_prompt(style="plain"):
+    """Build the system prompt with a personality from styles/. The style stays on for the whole chat."""
+    style_text = read_file(f"styles/{style}.md")
+    return f"Today's date is {date.today():%B %d, %Y}.\n" + SYSTEM_TOOLS + SKILLS_NOTE + "\n\n" + style_text
+
+SYSTEM_PROMPT = system_prompt()
