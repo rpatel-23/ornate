@@ -56,6 +56,13 @@ def run_python(code):
         return (result.stdout + result.stderr).strip() or "(no output. Use print() to show the result.)"
     except subprocess.TimeoutExpired:
         return "Error: code took longer than 10 seconds"
+
+# which Python function runs each tool. Other files can add more with add_tool.
+TOOL_FUNCS = {"run_python": lambda args: run_python(args["code"])}
+
+def add_tool(spec, func):
+    TOOLS.append(spec)
+    TOOL_FUNCS[spec["function"]["name"]] = func
     
 def ask_model(messages, use_tools, show):
     prompt = tokenizer.apply_chat_template(
@@ -92,12 +99,15 @@ def respond(messages, use_tools=True, show=True):
         if not call:
             break
         try:
-            code = json.loads(call.group(1))["arguments"]["code"]
-            output = run_python(code)
+            data = json.loads(call.group(1))
+            name = data["name"]
+            output = TOOL_FUNCS[name](data["arguments"])
         except Exception as e:
-            output = f"Error: bad tool call ({e})"
+            name, output = "tool error", f"Error: bad tool call ({e})"
         if show:
-            print(f"\n[tool output] {output}\n")
+            # show Python results in full, and just the first line of anything else
+            preview = output if name == "run_python" else (output.splitlines() or [""])[0]
+            print(f"\n[{name}] {preview}\n")
         messages.append({"role": "tool", "content": output})
     if messages[-1]["role"] == "tool":
         reply = ask_model(messages, False, show)

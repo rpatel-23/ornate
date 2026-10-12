@@ -28,7 +28,8 @@ Full numbers and caveats are in [EVALS.md](EVALS.md).
 | Agent loop with a Python tool | `harness.py`, `agent.py` | Done |
 | File attachments (text and PDF) | `files.py` | Done |
 | Math evals with saved transcripts | `eval_math.py`, `eval_hard.py`, `results/` | Done |
-| Skills, with one written so far | `skills/`, `agent.py` | Started |
+| Skills, picked automatically | `skills/`, `agent.py` | Done (two skills) |
+| Quizzes run by code | `quiz.py` | Done |
 | Optional thinking mode | `harness.py` | Done |
 | Memory | | Next |
 | Fine-tuning with before/after evals | | Planned |
@@ -57,8 +58,7 @@ In the chat:
 | Command | What it does |
 |---|---|
 | `/file <path>` | Attaches a text file or PDF to your next message |
-| `/skills` | Lists the available skills |
-| `/skill <name>` | Loads a skill's instructions into the chat |
+| `/quiz <topic>` or `/quiz 3 <topic>` | Runs a quiz, using any attached file as the material |
 | `q` | Quits |
 
 To let the model reason before it answers, start it with `ORNATE_THINK=1 python agent.py`. It is slower, and the reasoning is hidden behind a `(thinking)` marker.
@@ -104,7 +104,7 @@ too this death.
 
 ### Skills
 
-A skill is a Markdown file of instructions in `skills/`. `/skill <name>` adds that file to the system prompt for the rest of the chat, so the model follows a specific playbook for one kind of task without any fine-tuning.
+A skill is a Markdown file of instructions in `skills/`. The system prompt lists each skill with one line describing when to use it. When a message matches, the model calls a `load_skill` tool, the harness hands back the full file, and the model follows it. After the answer, the harness removes the skill text from the conversation, so it does not leak into later, unrelated messages.
 
 The first one, `missed-question`, explains a practice question I got wrong in a fixed format: correct answer, my answer, the skill tested, the method, the exact slip, a miss type, a rule to remember, and a Desmos check. The format comes from how I already review SAT practice.
 
@@ -132,10 +132,22 @@ Two flaws this test showed in my own work: one problem had two different mistake
 
 Nine problems, graded by reading, is enough to turn thinking on for this skill and not enough to quote a percentage.
 
+### Quizzes: the model writes, code keeps score
+
+The first quiz skill asked the model to run the whole quiz itself. It showed all the questions at once, skipped feedback, and reported 1 of 3 correct when the answer was 0. Keeping score and taking turns is bookkeeping, and code does that perfectly while models do not.
+
+So `quiz.py` asks the model once for the questions as JSON (question, correct answer, three wrong answers, explanation, the tempting trap), then plain Python runs the quiz: one question at a time, shuffled choices, a running score, and a list of what was missed. The model can start a quiz on its own through a `start_quiz` tool, and the results are added to the chat so follow-up questions work.
+
+### Picking skills automatically
+
+On a first check, a missed-question message went straight to the Python tool and skipped the skill. Moving the skill check to the front of the system prompt fixed that. A second problem was that a loaded skill stayed in the conversation, so a later plain question ("what does photosynthesis produce?") came back in the missed-question format. Removing skill text after each answer fixed that.
+
+On four fresh messages in one chat (a missed fraction problem, a plain question, a quiz request, a plain question), the model chose correctly every time. That is a spot check, not a test; a routing test with marked answers is next. Style instructions such as "no emojis, no sign-offs" are still followed only loosely.
+
 ## Limits
 
 - The evals are small (45 to 50 problems) and only cover math. Gaps of one or two questions are not meaningful.
-- The skill has been checked on 9 hand-graded problems, and skills have to be loaded by hand for now.
+- The missed-question skill has been checked on 9 hand-graded problems, and automatic skill picking only on a handful of messages.
 - An 8B to 30B local model is well below frontier models, especially on long multi-step tasks.
 - Nothing is fine-tuned yet. The models are stock Qwen3 weights from [mlx-community](https://huggingface.co/mlx-community).
 
