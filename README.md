@@ -35,7 +35,7 @@ Full numbers, transcripts, and caveats are in [EVALS.md](EVALS.md).
 | Adaptive thinking | `harness.py` | Done |
 | Math evals | `eval_math.py`, `eval_hard.py` | Done |
 | Skill and routing tests | `eval_skill.py`, `eval_routing.py` | Done |
-| Personality styles | | Next |
+| Personality styles | `styles/`, `agent.py` | Done (plain and roast) |
 | Web app, then desktop app | | Planned |
 | Search over class notes (RAG) | | Planned |
 | Memory across chats | | Planned |
@@ -66,6 +66,7 @@ Just type normally. Ornate decides on its own whether to explain a missed questi
 |---|---|
 | `/file <path>` | Attaches a text file or PDF to your next message |
 | `/quiz <topic>` or `/quiz 3 <topic>` | Runs a quiz, using any attached file as the material |
+| `/style roast`, `/style plain`, `/style` | Switches personality for the rest of the chat, or lists the styles |
 | `q` | Quits |
 
 Thinking is automatic by default. `ORNATE_THINK=1` keeps it on for every answer, and `ORNATE_THINK=0` turns it off.
@@ -91,6 +92,8 @@ python gpt.py            # train the tiny GPT (a few minutes)
 
 **Adaptive thinking.** Each answer starts with thinking off, so choosing what to do stays fast. If the model loads a skill or searches the web, thinking turns on for the rest of that answer. Today's date is in the system prompt so "most recent" means something.
 
+**Styles.** A style is a Markdown file in `styles/` added to the end of the system prompt, and unlike a skill it stays on for the whole chat. `plain` is the default: concise, no emojis, no sign-offs. `roast` is a teasing, deadpan tutor voice with rules for reading the room: match the user's energy, drop the jokes when they sound stressed, and keep every fact and skill format exactly as in plain style. Telling it to "chill" or "relax" switches back to plain in code, because the model kept joking one message after agreeing to stop.
+
 **File attachments.** `files.py` reads plain text and extracts text from PDFs with `pypdf`. The text is added to the message, so to the model an attachment is just more text. Files over 30,000 characters are cut off with a note.
 
 **Tiny GPT.** A character-level transformer trained on the complete works of Shakespeare (about 1.1M characters), written to understand each part of a language model.
@@ -106,7 +109,7 @@ Settings: 4 layers, 4 heads, 128-dim embeddings, 64-character context, 5,000 ste
 ## Limits
 
 - The math evals have 45 to 50 problems, the skill test 9, and the routing test 22, and I wrote the tests as well as the prompts. Gaps of one or two are not meaningful.
-- Style instructions such as "no emojis, no sign-offs" are followed only loosely.
+- Style instructions are followed only loosely. The model still adds emojis and sign-offs in plain style, and in roast style it tends to copy its example jokes rather than write new ones.
 - Search depends on an unofficial package, needs internet, and only sees short snippets. A small model can still misread them.
 - An 8B to 30B local model is well below frontier models, especially on long multi-step tasks.
 - Nothing is fine-tuned yet. The models are stock Qwen3 weights from [mlx-community](https://huggingface.co/mlx-community).
