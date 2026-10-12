@@ -1,23 +1,21 @@
 # Ornate
 
-A local study assistant that runs entirely on a MacBook. It explains practice questions I got wrong in the format I review with, quizzes me, reads files I attach, and runs Python to check its own math. The agent loop, skills, and evals are written from scratch with no agent framework, and the project started with a small GPT built by hand to understand what is inside the model.
+A local study assistant that runs on a MacBook. It explains practice questions I got wrong in the format I review with, quizzes me, reads files I attach, runs Python to check its math, and searches the web when it needs current information. The agent loop, skills, and evals are written from scratch with no agent framework, and the project started with a small GPT built by hand to understand what is inside the model.
 
-Runs on Apple Silicon with [MLX](https://github.com/ml-explore/mlx). No cloud, no API keys.
+Runs on Apple Silicon with [MLX](https://github.com/ml-explore/mlx). Everything runs offline except the optional web search, and nothing needs an API key.
 
 Built and tested on a MacBook Pro with an Apple M1 Max and 64 GB of memory, macOS 26.6.2. All speeds and timings in this repo come from that machine.
 
 ![Ornate reading an attached PDF, then using its Python tool for a calculation](demo.png)
 
-One session: a question answered from an attached PDF, then a calculation it hands to the Python tool.
-
 ## What I found
 
 - **Giving a model a calculator can make it worse.** A 14B model scored 48/50 on math problems by reasoning alone and 46/50 with a Python tool. Told to use code for any calculation, it stopped thinking, wrote quick wrong scripts, and reported impossible answers such as a 30 mph average for legs driven at 50 and 75 mph.
 - **My tool was quietly broken, and the score hid it.** Models often end code with a bare variable, like a notebook cell. My tool returned nothing for that, and the model retried until it ran out of turns. Fixing it took the 8B from 45/50 to 49/50. I only found it by reading transcripts.
-- **A prompt that fixed every failure on one test did not hold up on a new one.** A "reason first, then check your answer" prompt took the 14B from 46/50 to 50/50. On 45 fresh problems it tied on the 8B and gained one question on the 30B, at 50% more time. Most of the gain was the prompt fitting the test it was written for.
-- **Thinking mode, not better instructions, let it find my mistakes.** Three rewrites of the instructions could not get the model to work out how I reached a wrong answer. Turning on its reasoning mode could: it named the right mistake on 8 of 9 new problems, against 6 of 9 without it.
+- **A prompt that fixed every failure on one test did not hold up on a new one.** A "reason first, then check your answer" prompt took the 14B from 46/50 to 50/50. On 45 fresh problems it gained at most one question, at 50% more time. Most of the gain came from fitting the prompt to the test it was written for.
+- **Thinking helps hard work and hurts quick decisions.** With its reasoning mode on, the model found how I reached a wrong answer on 8 of 9 new problems, against 6 of 9 without it. But it picked the right tool slightly less often (17/18 against 18/18) and took three times as long. So Ornate decides with thinking off and turns it on only after it loads a skill or runs a search.
+- **Search found the right answer, and the model ignored it.** Asked who won the most recent Super Bowl, the correct result was in the search results, and the model still answered with an older game and the wrong winner. Adding today's date to the prompt and thinking after the search fixed it: the model wrote a better query and, on a later question, noticed and explained conflicting results.
 - **Some jobs belong in code, not the model.** Asked to run a quiz itself, the model showed every question at once and reported a score of 1 of 3 when I had 0. Moving turn-taking and scoring into Python fixed it completely.
-- **The biggest model cost nothing in speed.** Qwen3 30B-A3B only runs about 3B of its parameters per token, so it matched the 8B's speed and scored higher on every test.
 
 Full numbers, transcripts, and caveats are in [EVALS.md](EVALS.md).
 
@@ -26,16 +24,16 @@ Full numbers, transcripts, and caveats are in [EVALS.md](EVALS.md).
 | Part | Files | Status |
 |---|---|---|
 | Tiny GPT from scratch | `tokenizer.py`, `data.py`, `bigram.py`, `gpt.py` | Done |
-| Local chat with streaming | `chat.py` | Done |
-| Agent loop with a Python tool | `harness.py`, `agent.py` | Done |
+| Agent loop with tools | `harness.py`, `assistant.py`, `agent.py` | Done |
+| Python tool for math | `harness.py` | Done |
 | File attachments (text and PDF) | `files.py` | Done |
-| Math evals with saved transcripts | `eval_math.py`, `eval_hard.py`, `results/` | Done |
-| Skills, picked automatically | `skills/`, `agent.py` | Done (two skills) |
+| Skills, picked automatically | `skills/`, `assistant.py` | Done (two skills) |
 | Quizzes run by code | `quiz.py` | Done |
-| Optional thinking mode | `harness.py` | Done |
-| Skill eval (missed questions, hand-graded) | `eval_skill.py`, `problems_slips.json` | Done |
-| Routing test for skill picking | | Next |
-| Web search tool | | Next |
+| Web search | `assistant.py` | Done |
+| Adaptive thinking | `harness.py` | Done |
+| Math evals | `eval_math.py`, `eval_hard.py` | Done |
+| Skill and routing tests | `eval_skill.py`, `eval_routing.py` | Done |
+| Personality styles | | Next |
 | Web app, then desktop app | | Planned |
 | Search over class notes (RAG) | | Planned |
 | Memory across chats | | Planned |
@@ -50,17 +48,17 @@ Requires a Mac with Apple Silicon.
 git clone https://github.com/rpatel-23/ornate.git
 cd ornate
 python3 -m venv .venv && source .venv/bin/activate
-pip install mlx mlx-lm numpy sympy pypdf
+pip install mlx mlx-lm numpy sympy pypdf ddgs
 python agent.py
 ```
 
-The first run downloads Qwen3 30B-A3B (17 GB, needs about 17 GB of memory). For a smaller machine, use the 5 GB model:
+The first run downloads Qwen3 30B-A3B (17 GB, needs about 17 GB of memory). It only runs about 3B of its parameters for each token, so it is as fast as an 8B model and scored higher on every test here. For a smaller machine, use the 5 GB model:
 
 ```
 ORNATE_MODEL=mlx-community/Qwen3-8B-4bit python agent.py
 ```
 
-In the chat:
+Just type normally. Ornate decides on its own whether to explain a missed question, start a quiz, run Python, search the web, or answer directly. A few commands are also available:
 
 | Command | What it does |
 |---|---|
@@ -68,30 +66,32 @@ In the chat:
 | `/quiz <topic>` or `/quiz 3 <topic>` | Runs a quiz, using any attached file as the material |
 | `q` | Quits |
 
-To let the model reason before it answers, start it with `ORNATE_THINK=1 python agent.py`. It is slower, and the reasoning is hidden behind a `(thinking)` marker.
+Thinking is automatic by default. `ORNATE_THINK=1` keeps it on for every answer, and `ORNATE_THINK=0` turns it off.
 
-Other entry points:
+Tests:
 
 ```
-python gpt.py          # train the tiny GPT (a few minutes)
-python eval_hard.py    # run the 50-problem math eval
+python eval_routing.py   # does it pick the right first move? (22 messages, about 1 minute)
+python eval_hard.py      # 50 math problems, with and without the Python tool
+python eval_skill.py     # 9 missed questions, graded by reading the output
+python gpt.py            # train the tiny GPT (a few minutes)
 ```
 
 ## How it works
 
-### Agent loop
+**Agent loop.** A language model can only produce text. `harness.py` describes the available tools in the prompt. When the model replies with a tool call, the harness runs it, adds the result to the conversation, and asks again, for up to five rounds, then gives the model one final turn to answer. Tools are registered with `add_tool`, so adding one is a single function.
 
-A language model can only produce text. To let it run code, `harness.py` describes a `run_python` tool in the prompt. When the model replies with a tool call, the harness runs the code in a separate process, adds the output to the conversation, and asks the model again. This repeats for up to five rounds, then the model gets one final turn to answer.
+**Tools.** `run_python` runs model-written code in a separate process with a 10-second timeout (not sandboxed yet) and prints a bare last value the way a notebook does. `web_search` returns five results from DuckDuckGo, labeled as website text so the model treats them as information and not as instructions. `load_skill` and `start_quiz` are described below.
 
-The tool prints a bare last value the way a notebook does. It runs model-written code directly on the machine with a 10-second timeout and is not sandboxed yet.
+**Skills.** A skill is a Markdown file of instructions in `skills/`. The system prompt lists each skill with one line saying when to use it. When a message matches, the model calls `load_skill`, gets the full file, and follows it. After the answer, the harness removes the skill text from the conversation so it does not leak into later messages. `missed-question` gives the correct answer, my answer, the skill tested, the method, the exact slip with the wrong calculation written out, a miss type, a rule to remember, and a Desmos check. The format comes from how I already review SAT practice.
 
-### File attachments
+**Quizzes.** `quiz.py` asks the model once for questions as JSON: the question, the correct answer, three wrong answers, an explanation, and the most tempting trap. Plain Python then runs the quiz one question at a time with shuffled choices, a running score, and a list of what was missed. The results go back into the chat so follow-up questions work.
 
-`files.py` reads plain text directly and extracts text from PDFs with `pypdf`. The text is added to the user's message, so to the model an attachment is just more text. Files over 30,000 characters are cut off with a note. Scanned PDFs and images are not supported yet.
+**Adaptive thinking.** Each answer starts with thinking off, so choosing what to do stays fast. If the model loads a skill or searches the web, thinking turns on for the rest of that answer. Today's date is in the system prompt so "most recent" means something.
 
-### Tiny GPT
+**File attachments.** `files.py` reads plain text and extracts text from PDFs with `pypdf`. The text is added to the message, so to the model an attachment is just more text. Files over 30,000 characters are cut off with a note.
 
-A character-level transformer trained on the complete works of Shakespeare (about 1.1M characters), written to understand each part of a language model.
+**Tiny GPT.** A character-level transformer trained on the complete works of Shakespeare (about 1.1M characters), written to understand each part of a language model.
 
 | Model | Parameters | Train loss | Val loss |
 |---|---|---|---|
@@ -101,30 +101,11 @@ A character-level transformer trained on the complete works of Shakespeare (abou
 
 Settings: 4 layers, 4 heads, 128-dim embeddings, 64-character context, 5,000 steps, batch size 32, AdamW at 1e-3. The bigram and the GPT share the same data and training loop. The only difference is attention.
 
-Sample from the tiny GPT after a few minutes of training:
-
-```
-Nurse:
-Why so-heart, I merry age greelized: yet you common me
-too this death.
-```
-
-### Skills
-
-A skill is a Markdown file of instructions in `skills/`. The system prompt lists each skill with one line saying when to use it. When a message matches, the model calls a `load_skill` tool, the harness returns the full file, and the model follows it. After the answer, the harness removes the skill text from the conversation so it does not leak into later, unrelated messages.
-
-`missed-question` explains a practice question I got wrong: correct answer, my answer, the skill tested, the method, the exact slip with the wrong calculation written out, a miss type, a rule to remember, and a Desmos check. The format comes from how I already review SAT practice. It works best with thinking mode on.
-
-### Quizzes
-
-`quiz.py` asks the model once for questions as JSON (question, correct answer, three wrong answers, explanation, and the tempting trap). Plain Python then runs the quiz: one question at a time, shuffled choices, a running score, and a list of what was missed. The model can start a quiz on its own through a `start_quiz` tool, and the results go back into the chat so follow-up questions work.
-
-How each of these was debugged and tested is in [EVALS.md](EVALS.md#4-skills-and-quizzes).
-
 ## Limits
 
-- The evals are small (45 to 50 problems) and only cover math. Gaps of one or two questions are not meaningful.
-- The missed-question skill has been checked on 9 hand-graded problems, and automatic skill picking only on a handful of messages.
+- The math evals have 45 to 50 problems, the skill test 9, and the routing test 22, and I wrote the tests as well as the prompts. Gaps of one or two are not meaningful.
+- Style instructions such as "no emojis, no sign-offs" are followed only loosely.
+- Search depends on an unofficial package, needs internet, and only sees short snippets. A small model can still misread them.
 - An 8B to 30B local model is well below frontier models, especially on long multi-step tasks.
 - Nothing is fine-tuned yet. The models are stock Qwen3 weights from [mlx-community](https://huggingface.co/mlx-community).
 

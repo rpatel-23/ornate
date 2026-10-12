@@ -117,9 +117,39 @@ On a first check, a missed-question message went straight to the Python tool and
 
 On four fresh messages in one chat (a missed fraction problem, a plain question, a quiz request, a plain question), the model chose correctly every time. That is a spot check, not a test; a routing test with marked answers is next. Style instructions such as "no emojis, no sign-offs" are still followed only loosely.
 
+## 5. Routing and web search
+
+### Routing test
+
+`eval_routing.py` sends each message in `routing_tests.json` once and checks only the model's first move: load a skill, start a quiz, run Python, search, or answer directly. No tools are run, so it takes about a minute. Some messages are traps, such as "I put my phone in rice after it got wet" (contains "I put", the phrase the prompt names as a missed-question signal) and "I got a 1410 on the SAT, is that good?"
+
+| Setup | Correct first move | Time |
+|---|---|---|
+| 18 messages, thinking off | 18/18 | 36s |
+| 18 messages, thinking on | 17/18 | 110s |
+| 22 messages with web search added, thinking off | 21/22, then 22/22 after fixing the key | 52s |
+
+With thinking on, the one miss was a tip question. Its reasoning worked out the student's mistake correctly, then decided to verify the arithmetic with Python and never loaded the skill.
+
+After web search was added, "is a 1410 a good SAT score?" triggered a search where the key said to answer directly. Looking up current percentiles is reasonable, so the key now accepts either. When a test fails, the answer key is one of the things to check.
+
+### Web search
+
+Question: who won the most recent Super Bowl? (Super Bowl LX, February 2026: Seahawks 29, Patriots 13.)
+
+| Setup | Query it wrote | Answer |
+|---|---|---|
+| No date in prompt, thinking off | "who won the most recent superbowl" | Chiefs won Super Bowl LIX (wrong game and wrong winner) |
+| Date in prompt, told to prefer the newest result, thinking off | same | Same wrong answer, with the correct result shown fifth in its own search results |
+| Date in prompt, thinking on | "who won the most recent Super Bowl in 2026" | Correct |
+
+The wrong answer came from a cut-off snippet describing the Chiefs as the "two-time defending champion" going into Super Bowl LIX. With thinking on, the model used the date in its query, so most results were about the right game. Both the query and the reading changed at once, so this does not show how much each one mattered.
+
+On a later question (most recent NBA champion), with adaptive thinking, the results included both the 2025 and 2026 Finals. The model answered with 2026 and pointed out the conflict. Both are single questions, not a test.
+
 ## Caveats
 
 - 45 to 50 problems per set. A gap of one or two questions is noise.
-- Sections 1 to 3 cover only math. Section 4 is hand-graded and small. Nothing here measures coding or reading files yet.
+- Sections 1 to 3 cover only math. Section 4 is hand-graded and small. The routing test is 22 messages, and the search results are single questions. Nothing here measures coding or reading files yet.
 - The tool prompt changed again after these runs, adding "only use the tool when a question needs calculation." The numbers above have not been rerun with that wording.
 - The grader requires an `ANSWER:` line. One 8B miss on the held-out set had the correct value but no answer line.
