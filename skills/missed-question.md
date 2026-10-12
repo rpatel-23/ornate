@@ -36,6 +36,7 @@ Then give your final answer in exactly this format, one block per question, with
 
 ## Rules
 
+- If the user's answer is actually correct, say so plainly. Give only Correct answer, You put, and Why, then one line saying their answer is right and the mark was likely an error. Leave out Your slip, Miss type, and Rule to remember.
 - Show the actual method. Never solve by guessing or testing values unless the user asks for a shortcut.
 - "Silly mistake," "calculation error," and "misread the question" are not acceptable slips. Say which step, and what they did there.
 - If you cannot work out how they got their answer, say so in "Your slip" and name the two most likely causes.

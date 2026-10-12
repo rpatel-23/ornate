@@ -8,7 +8,11 @@ from mlx_lm import load, stream_generate
 import os
 
 MODEL = os.environ.get("ORNATE_MODEL", "mlx-community/Qwen3-30B-A3B-4bit")
-THINK = os.environ.get("ORNATE_THINK") == "1"
+# ORNATE_THINK=1: always think. ORNATE_THINK=0: never think.
+# Not set: think only after a tool that needs careful work.
+THINK_MODE = {"1": "always", "0": "never"}.get(os.environ.get("ORNATE_THINK"), "auto")
+THINK = THINK_MODE == "always"
+THINK_AFTER = {"load_skill", "web_search"}
 print("loading", MODEL)
 model, tokenizer = load(MODEL)
 
@@ -64,12 +68,12 @@ def add_tool(spec, func):
     TOOLS.append(spec)
     TOOL_FUNCS[spec["function"]["name"]] = func
     
-def ask_model(messages, use_tools, show):
+def ask_model(messages, use_tools, show, think=None):
     prompt = tokenizer.apply_chat_template(
         messages,
         tools=TOOLS if use_tools else None,
         add_generation_prompt=True,
-        enable_thinking=THINK,
+        enable_thinking=THINK if think is None else think,
     )
     reply = ""
     shown = 0
@@ -92,8 +96,9 @@ def ask_model(messages, use_tools, show):
 def respond(messages, use_tools=True, show=True):
     """Run the agent loop on a conversation and return the final reply."""
     reply = ""
+    think = THINK  # new: start with thinking off unless forced on
     for _ in range(5):
-        reply = ask_model(messages, use_tools, show)
+        reply = ask_model(messages, use_tools, show, think)
         messages.append({"role": "assistant", "content": reply})
         call = re.search(r"<tool_call>(.*?)</tool_call>", reply, re.DOTALL)
         if not call:
@@ -105,11 +110,12 @@ def respond(messages, use_tools=True, show=True):
         except Exception as e:
             name, output = "tool error", f"Error: bad tool call ({e})"
         if show:
-            # show Python results in full, and just the first line of anything else
             preview = output if name in ("run_python", "web_search") else (output.splitlines() or [""])[0]
             print(f"\n[{name}] {preview}\n")
         messages.append({"role": "tool", "content": output})
+        if THINK_MODE == "auto" and name in THINK_AFTER:  # new
+            think = True  # new: the hard part starts now, so think from here on
     if messages[-1]["role"] == "tool":
-        reply = ask_model(messages, False, show)
+        reply = ask_model(messages, False, show, think)
         messages.append({"role": "assistant", "content": reply})
     return reply
