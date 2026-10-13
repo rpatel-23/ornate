@@ -1,6 +1,6 @@
 # Ornate
 
-A local AI agent that runs entirely on a MacBook. It chats, runs Python to check its math, searches the web when it needs current information, reads files I attach, and loads skills on its own for specific jobs, such as working out exactly how I got a practice question wrong or running an interactive quiz. The agent loop, skills, and evals are written from scratch with no agent framework, and the project started with a small GPT built by hand to understand what is inside the model.
+A local AI agent that runs entirely on a MacBook. It chats, runs Python to check its math, searches the web when it needs current information, reads files I attach, remembers facts about me across chats, and loads skills on its own for specific jobs, such as working out exactly how I got a practice question wrong or running an interactive quiz. The agent loop, skills, and evals are written from scratch with no agent framework, and the project started with a small GPT built by hand to understand what is inside the model.
 
 Runs on Apple Silicon with [MLX](https://github.com/ml-explore/mlx). Everything runs offline except the optional web search, and nothing needs an API key.
 
@@ -36,9 +36,9 @@ Full numbers, transcripts, and caveats are in [EVALS.md](EVALS.md).
 | Math evals | `eval_math.py`, `eval_hard.py` | Done |
 | Skill and routing tests | `eval_skill.py`, `eval_routing.py` | Done |
 | Personality styles | `styles/`, `agent.py` | Done (plain and roast) |
+| Memory across chats | `memory.py`, `assistant.py` | Done |
 | Web app, then desktop app | | Planned |
 | Search over class notes (RAG) | | Planned |
-| Memory across chats | | Planned |
 | Reading photos of worksheets | | Planned |
 | Fine-tuning with before/after evals | | Planned |
 
@@ -60,13 +60,15 @@ The first run downloads Qwen3 30B-A3B (17 GB, needs about 17 GB of memory). It o
 ORNATE_MODEL=mlx-community/Qwen3-8B-4bit python agent.py
 ```
 
-Just type normally. Ornate decides on its own whether to explain a missed question, start a quiz, run Python, search the web, or answer directly. A few commands are also available:
+Just type normally. Ornate decides on its own whether to explain a missed question, start a quiz, run Python, search the web, save or delete a memory, or answer directly. A few commands are also available:
 
 | Command | What it does |
 |---|---|
 | `/file <path>` | Attaches a text file or PDF to your next message |
 | `/quiz <topic>` or `/quiz 3 <topic>` | Runs a quiz, using any attached file as the material |
 | `/style roast`, `/style plain`, `/style` | Switches personality for the rest of the chat, or lists the styles |
+| `/memory` | Lists what Ornate remembers about you |
+| `/forget <number>` | Deletes a memory by its number in `/memory` |
 | `q` | Quits |
 
 Thinking is automatic by default. `ORNATE_THINK=1` keeps it on for every answer, and `ORNATE_THINK=0` turns it off.
@@ -112,6 +114,7 @@ Settings: 4 layers, 4 heads, 128-dim embeddings, 64-character context, 5,000 ste
 - Style instructions are followed only loosely. The model still adds emojis and sign-offs in plain style, and in roast style it tends to copy its example jokes rather than write new ones.
 - Search depends on an unofficial package, needs internet, and only sees short snippets. A small model can still misread them.
 - An 8B to 30B local model is well below frontier models, especially on long multi-step tasks.
+- Memories are saved to `memory.json` on your machine, which is git-ignored so personal facts never reach GitHub. Ornate sometimes misses a fact mentioned in passing alongside a question, so saying "remember" is the reliable way.
 - Nothing is fine-tuned yet. The models are stock Qwen3 weights from [mlx-community](https://huggingface.co/mlx-community).
 
 ## Notes
