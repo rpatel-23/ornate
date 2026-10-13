@@ -89,5 +89,37 @@
   {
     "message": "what is the capital of Japan?",
     "expect": "none"
+  },
+  {
+    "message": "btw im taking AP Gov this year",
+    "expect": "remember"
+  },
+  {
+    "message": "for future reference i like answers in bullet points",
+    "expect": "remember"
+  },
+  {
+    "message": "im a junior and want to major in CS. what classes should i take senior year?",
+    "expect": "remember"
+  },
+  {
+    "message": "i have a stats test tomorrow, can you quickly explain standard deviation",
+    "expect": "none"
+  },
+  {
+    "message": "rmbr that my precalc teacher wants answers in exact form not decimals",
+    "expect": "remember"
+  },
+  {
+    "message": "save this in your memory: my SAT is on december 5",
+    "expect": "remember"
+  },
+  {
+    "message": "dont forget i hate long explanations",
+    "expect": "remember"
+  },
+  {
+    "message": "i cant remember the quadratic formula, what is it again?",
+    "expect": "none"
   }
 ]

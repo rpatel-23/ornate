@@ -1,8 +1,9 @@
 import os
 import re
-from assistant import SYSTEM_PROMPT, system_prompt, respond, unload_skills, read_file, run_quiz
+from assistant import system_prompt, respond, unload_skills, read_file, run_quiz, add_memory_hint
+import memory
 
-messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+messages = [{"role": "system", "content": system_prompt()}]
 attached = ""  # file text waiting to go out with your next message
 style = "plain"
 
@@ -35,6 +36,19 @@ while True:
             messages.append({"role": "user", "content": summary})
         continue
 
+    # "/memory" lists saved facts; "/forget 2" deletes fact #2
+    if user.strip() == "/memory":
+        facts = memory.load()
+        print("\n".join(f"{i}. {f}" for i, f in enumerate(facts, 1)) or "no memories yet")
+        continue
+    if user.startswith("/forget "):
+        try:
+            print("forgot:", memory.remove(int(user[8:])))
+            messages[0]["content"] = system_prompt(style)   # rebuild the prompt without it
+        except (ValueError, IndexError):
+            print("usage: /forget <number from /memory>")
+        continue
+
     # "/file path" attaches a file instead of sending a message
     if user.startswith("/file "):
         path = user[6:].strip().strip("'\"").replace("\\ ", " ")
@@ -51,7 +65,8 @@ while True:
         style = "plain"
         print("(switched to plain style)")
 
-    messages.append({"role": "user", "content": user + attached})
+    messages[0]["content"] = system_prompt(style)   # refresh, so memories saved or deleted last turn are current
+    messages.append({"role": "user", "content": add_memory_hint(user) + attached})
     attached = ""
     print("\nornate: ", end="")
     respond(messages)

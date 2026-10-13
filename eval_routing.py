@@ -2,19 +2,18 @@ import json
 import os
 import re
 import time
-from assistant import SYSTEM_PROMPT
-from harness import ask_model, MODEL, THINK
+from assistant import SYSTEM_PROMPT, add_memory_hint
+from harness import ask_model, MODEL, THINK, find_tool_call
 
 # what each expected label means as a first action
 def first_action(reply):
     """Return the model's first move: a skill name, 'quiz', 'python', or 'none'."""
-    call = re.search(r"<tool_call>(.*?)</tool_call>", reply, re.DOTALL)
-    if not call:
-        return "none"
     try:
-        data = json.loads(call.group(1))
+        data = find_tool_call(reply)
     except Exception:
         return "bad tool call"
+    if data is None:
+        return "none"
     name = data.get("name")
     if name == "load_skill":
         return data.get("arguments", {}).get("name", "load_skill")
@@ -30,7 +29,7 @@ with open("routing_tests.json") as f:
 start = time.time()
 records = []
 for t in tests:
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": t["message"]}]
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": add_memory_hint(t["message"])}]
     # only the model's first reply matters here, so no tools are actually run
     reply = ask_model(messages, use_tools=True, show=False)
     got = first_action(reply)

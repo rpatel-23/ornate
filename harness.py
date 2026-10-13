@@ -93,6 +93,19 @@ def ask_model(messages, use_tools, show, think=None):
         print()
     return reply
 
+def find_tool_call(reply):
+    """Return the tool call in a reply as {"name": ..., "arguments": ...}, or None if there isn't one."""
+    call = re.search(r"<tool_call>(.*?)</tool_call>", reply, re.DOTALL)
+    if call:
+        return json.loads(call.group(1))
+    # backup: sometimes the model writes the call without its tags, like
+    #   remember
+    #   {"fact": "Hates long explanations."}
+    bare = re.fullmatch(r"\s*(\w+)\s*(\{.*\})\s*", reply.split("</think>")[-1], re.DOTALL)
+    if bare and bare.group(1) in TOOL_FUNCS:
+        return {"name": bare.group(1), "arguments": json.loads(bare.group(2))}
+    return None
+
 def respond(messages, use_tools=True, show=True):
     """Run the agent loop on a conversation and return the final reply."""
     reply = ""
@@ -100,11 +113,10 @@ def respond(messages, use_tools=True, show=True):
     for _ in range(5):
         reply = ask_model(messages, use_tools, show, think)
         messages.append({"role": "assistant", "content": reply})
-        call = re.search(r"<tool_call>(.*?)</tool_call>", reply, re.DOTALL)
-        if not call:
-            break
         try:
-            data = json.loads(call.group(1))
+            data = find_tool_call(reply)
+            if data is None:
+                break
             name = data["name"]
             output = TOOL_FUNCS[name](data["arguments"])
         except Exception as e:
