@@ -1,0 +1,15 @@
+{
+  "memory": ["Takes AP Stats.", "Takes AP Precalculus.", "Likes short answers.", "Plays soccer.", "SAT is on December 5."],
+  "tests": [
+    {"message": "forget that i take ap stats", "expect": "forget", "facts": ["Takes AP Stats."]},
+    {"message": "i quit soccer, delete that from your memory", "expect": "forget", "facts": ["Plays soccer."]},
+    {"message": "forget my sat date and that i like short answers", "expect": "forget", "facts": ["SAT is on December 5.", "Likes short answers."]},
+    {"message": "delete everything you know about my classes", "expect": "forget", "facts": ["Takes AP Stats.", "Takes AP Precalculus."]},
+    {"message": "can you forget i said i like short answers", "expect": "forget", "facts": ["Likes short answers."]},
+    {"message": "forget that i play basketball", "expect": "none"},
+    {"message": "dont forget my sat is on december 5", "expect": ["none", "remember"]},
+    {"message": "i forgot my calculator at home lol, what's a trick for 15% tips", "expect": "none"},
+    {"message": "what do you know about me?", "expect": "none"},
+    {"message": "remind me, when is my SAT?", "expect": "none"}
+  ]
+}

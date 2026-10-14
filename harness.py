@@ -106,7 +106,7 @@ def find_tool_call(reply):
         return {"name": bare.group(1), "arguments": json.loads(bare.group(2))}
     return None
 
-def respond(messages, use_tools=True, show=True):
+def respond(messages, use_tools=True, show=True, check=None):
     """Run the agent loop on a conversation and return the final reply."""
     reply = ""
     think = THINK  # new: start with thinking off unless forced on
@@ -116,6 +116,12 @@ def respond(messages, use_tools=True, show=True):
         try:
             data = find_tool_call(reply)
             if data is None:
+                # optional code check on the final answer; if it returns a note, send it back and let the model fix itself once
+                note = check(reply, messages) if check else None
+                if note:
+                    check = None   # only one retry, so it can never loop
+                    messages.append({"role": "user", "content": note})
+                    continue
                 break
             name = data["name"]
             output = TOOL_FUNCS[name](data["arguments"])

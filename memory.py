@@ -31,6 +31,11 @@ def remove(n):
     save(facts)
     return gone
 
+def find_text(fact):
+    """Return the saved fact that matches this text exactly (ignoring case and a final period), or None."""
+    key = fact.strip().lower().rstrip(".")
+    return next((f for f in load() if f.lower().rstrip(".") == key), None)
+
 def remove_text(fact):
     """Delete the fact that matches this text exactly (ignoring case and a final period). Returns it, or None."""
     facts = load()

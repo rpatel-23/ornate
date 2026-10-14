@@ -147,9 +147,47 @@ The wrong answer came from a cut-off snippet describing the Chiefs as the "two-t
 
 On a later question (most recent NBA champion), with adaptive thinking, the results included both the 2025 and 2026 Finals. The model answered with 2026 and pointed out the conflict. Both are single questions, not a test.
 
+## 6. Memory
+
+Ornate saves facts about the user to `memory.json` (git-ignored) with a `remember` tool and deletes them with a `forget` tool. Saved facts go into the system prompt at the start of every turn. `/memory` and `/forget` let the user check and delete facts directly.
+
+### Routing with memory tools
+
+`eval_routing.py` grew from 22 to 30 messages: 4 where the user mentions a lasting fact, 3 where they ask to save something ("rmbr that...", "dont forget..."), a one-time fact that should not be saved (a test tomorrow), and a trap where "remember" is not a save request ("i cant remember the quadratic formula").
+
+| Run | Score |
+|---|---|
+| First run with `remember` | 26/30 |
+| After fixing the tool call parser | 29/30 |
+| After adding `forget` and a "don't claim a save" prompt rule | 27/30 |
+| Same, plus a code check for fake saves | model alone 27/30, with check 28/30 |
+
+All 22 original messages kept passing until the last two runs, when "can you quickly explain standard deviation" flipped from answering to running Python. The model's output is deterministic, so adding a tool to the prompt was enough to change its behavior on an unrelated message.
+
+What the transcripts showed:
+
+- **Correct calls scored as misses.** Two "fails" were the model calling `remember` correctly but without the `<tool_call>` tags. The harness did not see a tool call, so nothing was saved and the eval scored "none". The fix was in the parser (`find_tool_call`), which now also accepts a bare tool name followed by JSON, but only when that is the whole reply and the name is a real tool. Same lesson as the 45 to 49 bug: read the transcript before changing the prompt.
+- **Claiming a save without making one.** After the tool changed shape, "btw im taking AP Gov this year" got the reply "remembered." with no tool call. A prompt rule against this changed nothing. A code check now catches replies that say saved/remembered/noted with no `remember` call in that turn and gives the model one retry. The eval reports both scores, so the check does not hide what the model does on its own.
+- **Several facts in one.** Told "one fact per call", the model still saved "Takes AP Stats and AP Pre Calc, likes short answers" as one fact, so deleting one deleted all three. Changing the tool's input from one string to a list of strings fixed it.
+- **Still missed:** a fact mentioned alongside a question ("im a junior and want to major in CS. what classes should i take?"). Asking explicitly to remember is reliable; mentioning something in passing is not.
+
+### Forgetting
+
+`eval_memory.py` gives the model a fake memory list in a temp file, so the real `memory.json` is never touched. A forget passes only if the model sends exactly the right facts.
+
+Result: 9/10. All 5 real forgets sent the right facts, including two at once. "dont forget...", "i forgot my calculator", and questions about saved facts did not trigger a delete.
+
+The miss: "forget that i play basketball", with nothing about basketball saved, deleted "Plays soccer." instead.
+
+How deleting changed:
+
+1. **By number.** Facts were numbered in the prompt and the model deleted by number. In a live test, "forget that i take ap stats" deleted AP Precalc. The model counted from a list it had written earlier in the chat, not the current one.
+2. **By exact text.** The code deletes only on an exact match, and a miss deletes nothing and returns the real list. This fixed the stale numbers but not the basketball case, because "Plays soccer." really is saved. Code can check that a fact exists, not that it is the one the user meant.
+3. **Confirm in code.** The `forget` tool now shows the facts and asks the user y/n before deleting. The model cannot skip it. The eval still counts the basketball case as a fail, because it measures the model, and the model is still wrong.
+
 ## Caveats
 
 - 45 to 50 problems per set. A gap of one or two questions is noise.
-- Sections 1 to 3 cover only math. Section 4 is hand-graded and small. The routing test is 22 messages, and the search results are single questions. Nothing here measures coding or reading files yet.
+- Sections 1 to 3 cover only math. Section 4 is hand-graded and small. The routing test is 30 messages, the memory test 10, and the search results are single questions. Nothing here measures coding or reading files yet.
 - The tool prompt changed again after these runs, adding "only use the tool when a question needs calculation." The numbers above have not been rerun with that wording.
 - The grader requires an `ANSWER:` line. One 8B miss on the held-out set had the correct value but no answer line.

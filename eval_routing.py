@@ -2,7 +2,7 @@ import json
 import os
 import re
 import time
-from assistant import SYSTEM_PROMPT, add_memory_hint
+from assistant import SYSTEM_PROMPT, add_memory_hint, check_fake_save
 from harness import ask_model, MODEL, THINK, find_tool_call
 
 # what each expected label means as a first action
@@ -33,15 +33,24 @@ for t in tests:
     # only the model's first reply matters here, so no tools are actually run
     reply = ask_model(messages, use_tools=True, show=False)
     got = first_action(reply)
+    raw = got   # what the model did on its own, before any code check
+    # same one-time check the chat uses: if it claimed a save without calling remember, it gets one retry
+    note = check_fake_save(reply, messages) if got == "none" else None
+    if note:
+        messages += [{"role": "assistant", "content": reply}, {"role": "user", "content": note}]
+        reply = ask_model(messages, use_tools=True, show=False)
+        got = first_action(reply)
     # "expect" is one right answer, or a list when more than one first move is reasonable
     allowed = t["expect"] if isinstance(t["expect"], list) else [t["expect"]]
     ok = got in allowed
-    print("PASS" if ok else "FAIL", f"| expected {' or '.join(allowed):<22} got {got:<16} | {t['message']}")
-    records.append({**t, "got": got, "correct": ok, "reply": reply})
+    print("PASS" if ok else "FAIL", f"| expected {' or '.join(allowed):<22} got {got:<16} | {t['message']}" + (f"  (caught by check, model first said {raw})" if raw != got else ""))
+    records.append({**t, "got": got, "raw": raw, "correct": ok, "raw_correct": raw in allowed, "reply": reply})
 
 score = sum(r["correct"] for r in records)
+raw_score = sum(r["raw_correct"] for r in records)
 os.makedirs("results", exist_ok=True)
 path = f"results/routing__{MODEL.split('/')[-1]}__think{'1' if THINK else '0'}.json"
 with open(path, "w") as f:
-    json.dump({"model": MODEL, "thinking": THINK, "score": score, "records": records}, f, indent=2)
-print(f"\n{score}/{len(records)} routed correctly in {round(time.time() - start)}s | thinking {'on' if THINK else 'off'} | saved to {path}")
+    json.dump({"model": MODEL, "thinking": THINK, "score": score, "raw_score": raw_score, "records": records}, f, indent=2)
+print(f"\nmodel alone: {raw_score}/{len(records)} | with code check: {score}/{len(records)}")
+print(f"{score}/{len(records)} routed correctly in {round(time.time() - start)}s | thinking {'on' if THINK else 'off'} | saved to {path}")

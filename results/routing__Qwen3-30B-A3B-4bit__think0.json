@@ -2,125 +2,160 @@
   "model": "mlx-community/Qwen3-30B-A3B-4bit",
   "thinking": false,
   "score": 28,
+  "raw_score": 27,
   "records": [
     {
       "message": "If 5x + 3 = 28, what is 10x? I put 5.",
       "expect": "missed-question",
       "got": "missed-question",
+      "raw": "missed-question",
       "correct": true,
+      "raw_correct": true,
       "reply": "<tool_call>\n{\"name\": \"load_skill\", \"arguments\": {\"name\": \"missed-question\"}}\n</tool_call>"
     },
     {
       "message": "I got this wrong on my practice test: a 15% tip on a $40 meal. I said $4. Why is that wrong?",
       "expect": "missed-question",
       "got": "missed-question",
+      "raw": "missed-question",
       "correct": true,
+      "raw_correct": true,
       "reply": "<tool_call>\n{\"name\": \"load_skill\", \"arguments\": {\"name\": \"missed-question\"}}\n</tool_call>"
     },
     {
       "message": "my teacher marked my answer of 81 wrong for 3 to the power of 3. what did I mess up?",
       "expect": "missed-question",
       "got": "missed-question",
+      "raw": "missed-question",
       "correct": true,
+      "raw_correct": true,
       "reply": "<tool_call>\n{\"name\": \"load_skill\", \"arguments\": {\"name\": \"missed-question\"}}\n</tool_call>"
     },
     {
       "message": "Which amendment protects free speech? I answered the 2nd and it said incorrect.",
       "expect": "missed-question",
       "got": "missed-question",
+      "raw": "missed-question",
       "correct": true,
+      "raw_correct": true,
       "reply": "<tool_call>\n{\"name\": \"load_skill\", \"arguments\": {\"name\": \"missed-question\"}}\n</tool_call>"
     },
     {
       "message": "The mean of 4, 8, and 12 is what? I wrote 24 but the answer key says 8.",
       "expect": "missed-question",
       "got": "missed-question",
+      "raw": "missed-question",
       "correct": true,
+      "raw_correct": true,
       "reply": "<tool_call>\n{\"name\": \"load_skill\", \"arguments\": {\"name\": \"missed-question\"}}\n</tool_call>"
     },
     {
       "message": "quiz me on the causes of the American Revolution",
       "expect": "quiz",
       "got": "quiz",
+      "raw": "quiz",
       "correct": true,
+      "raw_correct": true,
       "reply": "<tool_call>\n{\"name\": \"start_quiz\", \"arguments\": {\"topic\": \"causes of the American Revolution\"}}\n</tool_call>"
     },
     {
       "message": "can you give me 4 practice questions on cell organelles",
       "expect": "quiz",
       "got": "quiz",
+      "raw": "quiz",
       "correct": true,
+      "raw_correct": true,
       "reply": "<tool_call>\n{\"name\": \"start_quiz\", \"arguments\": {\"topic\": \"cell organelles\", \"count\": 4}}\n</tool_call>"
     },
     {
       "message": "test me on z-scores, 3 questions",
       "expect": "quiz",
       "got": "quiz",
+      "raw": "quiz",
       "correct": true,
+      "raw_correct": true,
       "reply": "<tool_call>\n{\"name\": \"start_quiz\", \"arguments\": {\"topic\": \"z-scores\", \"count\": 3}}\n</tool_call>"
     },
     {
       "message": "I have a vocab test tomorrow on SAT words, drill me",
       "expect": "quiz",
       "got": "quiz",
+      "raw": "quiz",
       "correct": true,
+      "raw_correct": true,
       "reply": "<tool_call>\n{\"name\": \"start_quiz\", \"arguments\": {\"topic\": \"SAT words\", \"count\": 10}}\n</tool_call>"
     },
     {
       "message": "what is 17.5% of 2,348?",
       "expect": "python",
       "got": "python",
+      "raw": "python",
       "correct": true,
+      "raw_correct": true,
       "reply": "<tool_call>\n{\"name\": \"run_python\", \"arguments\": {\"code\": \"print(0.175 * 2348)\"}}\n</tool_call>"
     },
     {
       "message": "If I invest $5,000 at 6% interest compounded monthly, how much do I have after 8 years?",
       "expect": "python",
       "got": "python",
+      "raw": "python",
       "correct": true,
+      "raw_correct": true,
       "reply": "To calculate the future value of an investment with compound interest, we use the formula:\n\n$$\nA = P \\left(1 + \\frac{r}{n}\\right)^{nt}\n$$\n\nWhere:\n- $ A $ is the future value of the investment\n- $ P $ is the principal amount ($5,000)\n- $ r $ is the annual interest rate (6% or 0.06)\n- $ n $ is the number of times the interest is compounded per year (monthly = 12)\n- $ t $ is the number of years (8)\n\nSubstituting the values:\n\n$$\nA = 5000 \\left(1 + \\frac{0.06}{12}\\right)^{12 \\times 8}\n$$\n\nNow, I will calculate this using Python.\n<tool_call>\n{\"name\": \"run_python\", \"arguments\": {\"code\": \"import math\\n\\nP = 5000\\nr = 0.06\\nnt = 12 * 8\\nA = P * (1 + r / 12) ** nt\\nA\"}}\n</tool_call>"
     },
     {
       "message": "what is the standard deviation of 3, 7, 7, 19, 24?",
       "expect": "python",
       "got": "python",
+      "raw": "python",
       "correct": true,
-      "reply": "<tool_call>\n{\"name\": \"run_python\", \"arguments\": {\"code\": \"import statistics\\n\\n# Given data\\nvalues = [3, 7, 7, 19, 24]\\n\\n# Calculate standard deviation\\nstd_dev = statistics.stdev(values)\\n\\n# Print the result\\nprint(std_dev)\"}}\n</tool_call>"
+      "raw_correct": true,
+      "reply": "<tool_call>\n{\"name\": \"run_python\", \"arguments\": {\"code\": \"import statistics\\n\\n# Given data\\nvalues = [3, 7, 7, 19, 24]\\n\\n# Calculate standard deviation\\nstd_dev = statistics.stdev(values)\\n\\nprint(std_dev)\"}}\n</tool_call>"
     },
     {
       "message": "what does the mitochondria do?",
       "expect": "none",
       "got": "none",
+      "raw": "none",
       "correct": true,
-      "reply": "The mitochondria is an organelle found in eukaryotic cells. Its primary function is to produce energy in the form of adenosine triphosphate (ATP) through a process called cellular respiration. It is often referred to as the \"powerhouse of the cell\" because it generates most of the cell's supply of ATP."
+      "raw_correct": true,
+      "reply": "The mitochondria is an organelle found in eukaryotic cells. Its primary function is to produce energy in the form of adenosine triphosphate (ATP) through a process called cellular respiration. Additionally, mitochondria are involved in other cellular processes such as calcium storage, apoptosis (programmed cell death), and regulating the cell's metabolic state."
     },
     {
       "message": "who wrote the Federalist Papers?",
       "expect": "none",
       "got": "none",
+      "raw": "none",
       "correct": true,
+      "raw_correct": true,
       "reply": "The Federalist Papers were written by Alexander Hamilton, James Madison, and John Jay. They wrote these essays to promote the ratification of the United States Constitution."
     },
     {
       "message": "I put my phone in rice after it got wet. will that fix it?",
       "expect": "none",
       "got": "none",
+      "raw": "none",
       "correct": true,
-      "reply": "The rice method is not effective for drying a wet phone. Rice can absorb some moisture, but it is not the best solution. Instead, turn off the phone immediately, remove any accessories, and let it air dry in a cool, dry place for at least 24-48 hours. Avoid using heat sources like hair dryers, as they can damage the phone. If the phone still doesn't work, consider taking it to a professional for repair."
+      "raw_correct": true,
+      "reply": "The rice method is not effective for drying a wet phone. Rice can absorb some moisture, but it is not the best solution. It is recommended to turn off the phone immediately, remove any accessories, and let it air dry in a cool, dry place for at least 24-48 hours. If the phone still does not work, it may need to be taken to a professional for repair."
     },
     {
       "message": "explain the difference between weather and climate in two sentences",
       "expect": "none",
       "got": "none",
+      "raw": "none",
       "correct": true,
-      "reply": "Weather refers to the short-term atmospheric conditions in a specific place at a specific time, such as temperature, precipitation, and wind. Climate refers to the long-term patterns of weather in a region, typically measured over decades."
+      "raw_correct": true,
+      "reply": "Weather refers to the short-term atmospheric conditions in a specific place at a specific time, while climate refers to the long-term patterns of temperature, precipitation, and other atmospheric conditions in a region. Weather can change hourly, while climate is determined over decades."
     },
     {
       "message": "what's a good way to study for a history test?",
       "expect": "none",
       "got": "none",
+      "raw": "none",
       "correct": true,
-      "reply": "A good way to study for a history test is to review key events, dates, and figures using a timeline. You can also create flashcards for important terms and concepts, and practice explaining events in your own words. Additionally, quizzing yourself or using practice questions can help reinforce your memory. Would you like to be quizzed on history?"
+      "raw_correct": true,
+      "reply": "A good way to study for a history test is to review key events, dates, and figures using a structured approach. You can create flashcards for important terms, use timelines to understand the sequence of events, and practice answering short-answer or essay questions. Additionally, teaching the material to someone else or using summarization techniques can help reinforce your memory."
     },
     {
       "message": "I got a 1410 on the SAT. is that a good score?",
@@ -129,92 +164,118 @@
         "web_search"
       ],
       "got": "none",
+      "raw": "none",
       "correct": true,
-      "reply": "The SAT score of 1410 is considered a good score. It is above the national average and can make you competitive for many colleges and universities. However, the definition of a \"good\" score can vary depending on the specific colleges you are applying to."
+      "raw_correct": true,
+      "reply": "The SAT score of 1410 is considered a good score. It is above the national average and can make you competitive for many colleges. However, the definition of \"good\" can vary depending on the specific colleges you are applying to."
     },
     {
       "message": "who won the most recent Super Bowl?",
       "expect": "web_search",
       "got": "web_search",
+      "raw": "web_search",
       "correct": true,
+      "raw_correct": true,
       "reply": "<tool_call>\n{\"name\": \"web_search\", \"arguments\": {\"query\": \"who won the most recent Super Bowl\"}}\n</tool_call>"
     },
     {
       "message": "what's the latest version of Python that came out?",
       "expect": "web_search",
       "got": "web_search",
+      "raw": "web_search",
       "correct": true,
+      "raw_correct": true,
       "reply": "<tool_call>\n{\"name\": \"web_search\", \"arguments\": {\"query\": \"latest version of Python\"}}\n</tool_call>"
     },
     {
       "message": "when is the next SAT test date?",
       "expect": "web_search",
       "got": "web_search",
+      "raw": "web_search",
       "correct": true,
+      "raw_correct": true,
       "reply": "<tool_call>\n{\"name\": \"web_search\", \"arguments\": {\"query\": \"Next SAT test date\"}}\n</tool_call>"
     },
     {
       "message": "what is the capital of Japan?",
       "expect": "none",
       "got": "none",
+      "raw": "none",
       "correct": true,
+      "raw_correct": true,
       "reply": "The capital of Japan is Tokyo."
     },
     {
       "message": "btw im taking AP Gov this year",
       "expect": "remember",
-      "got": "none",
-      "correct": false,
-      "reply": "remembered."
+      "got": "remember",
+      "raw": "none",
+      "correct": true,
+      "raw_correct": false,
+      "reply": "<tool_call>\n{\"name\": \"remember\", \"arguments\": {\"facts\": [\"Taking AP Gov this year.\"]}}\n</tool_call>"
     },
     {
       "message": "for future reference i like answers in bullet points",
       "expect": "remember",
       "got": "remember",
+      "raw": "remember",
       "correct": true,
-      "reply": "<tool_call>\n{\"name\": \"remember\", \"arguments\": {\"facts\": [\"Likes answers in bullet points.\"]}}\n</tool_call>"
+      "raw_correct": true,
+      "reply": "<tool_call>\n{\"name\": \"remember\", \"arguments\": {\"facts\": [\"likes answers in bullet points\"]}}\n</tool_call>"
     },
     {
       "message": "im a junior and want to major in CS. what classes should i take senior year?",
       "expect": "remember",
       "got": "none",
+      "raw": "none",
       "correct": false,
-      "reply": "To prepare for a Computer Science major, you should take advanced math and computer science courses. Consider taking AP Calculus, AP Computer Science, and any available advanced programming courses. These will help build a strong foundation for your future studies."
+      "raw_correct": false,
+      "reply": "To prepare for a Computer Science major, you should take advanced math and computer science courses. Consider taking AP Calculus, AP Computer Science, and any available courses in programming, algorithms, or data structures. These will help build a strong foundation for your major.\n\nIf you need help with specific course selections or planning your schedule, let me know!"
     },
     {
       "message": "i have a stats test tomorrow, can you quickly explain standard deviation",
       "expect": "none",
-      "got": "none",
-      "correct": true,
-      "reply": "Standard deviation is a measure of how spread out the numbers in a dataset are. It tells you how much the values deviate from the mean (average). A low standard deviation means the values are close to the mean, while a high standard deviation means the values are more spread out.\n\nTo calculate it:\n1. Find the mean of the dataset.\n2. Subtract the mean from each value to find the deviation of each value.\n3. Square each deviation.\n4. Find the average of these squared deviations.\n5. Take the square root of that average.\n\nWould you like an example?"
+      "got": "python",
+      "raw": "python",
+      "correct": false,
+      "raw_correct": false,
+      "reply": "<tool_call>\n{\"name\": \"run_python\", \"arguments\": {\"code\": \"import math\\ndef standard_deviation(data):\\n    n = len(data)\\n    mean = sum(data) / n\\n    variance = sum((x - mean) ** 2 for x in data) / n\\n    return math.sqrt(variance)\\n\\n# Example data\\nexample_data = [10, 12, 14, 16, 18]\\nstd_dev = standard_deviation(example_data)\\nprint(std_dev)\"}}\n</tool_call>"
     },
     {
       "message": "rmbr that my precalc teacher wants answers in exact form not decimals",
       "expect": "remember",
       "got": "remember",
+      "raw": "remember",
       "correct": true,
-      "reply": "<tool_call>\n{\"name\": \"remember\", \"arguments\": {\"facts\": [\"My precalc teacher wants answers in exact form not decimals\"]}}\n</tool_call>"
+      "raw_correct": true,
+      "reply": "<tool_call>\n{\"name\": \"remember\", \"arguments\": {\"facts\": [\"my precalc teacher wants answers in exact form not decimals\"]}}\n</tool_call>"
     },
     {
       "message": "save this in your memory: my SAT is on december 5",
       "expect": "remember",
       "got": "remember",
+      "raw": "remember",
       "correct": true,
+      "raw_correct": true,
       "reply": "<tool_call>\n{\"name\": \"remember\", \"arguments\": {\"facts\": [\"my SAT is on december 5\"]}}\n</tool_call>"
     },
     {
       "message": "dont forget i hate long explanations",
       "expect": "remember",
       "got": "remember",
+      "raw": "remember",
       "correct": true,
-      "reply": "<tool_call>\n{\"name\": \"remember\", \"arguments\": {\"facts\": [\"Hates long explanations\"]}}\n</tool_call>"
+      "raw_correct": true,
+      "reply": "<tool_call>\n{\"name\": \"remember\", \"arguments\": {\"facts\": [\"hates long explanations\"]}}\n</tool_call>"
     },
     {
       "message": "i cant remember the quadratic formula, what is it again?",
       "expect": "none",
       "got": "none",
+      "raw": "none",
       "correct": true,
-      "reply": "The quadratic formula is used to solve quadratic equations of the form $ ax^2 + bx + c = 0 $. The formula is:\n\n$$\nx = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\n$$\n\nThis gives the two possible solutions for $ x $. Let me know if you need help applying it to a specific equation."
+      "raw_correct": true,
+      "reply": "The quadratic formula is used to solve quadratic equations of the form $ ax^2 + bx + c = 0 $. The formula is:\n\n$$\nx = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\n$$"
     }
   ]
 }

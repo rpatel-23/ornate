@@ -102,9 +102,16 @@ def forget(args):
     facts = args.get("facts") or []
     if isinstance(facts, str):
         facts = [facts]
-    gone, missing = [], []
-    for f in facts:
-        (gone if memory.remove_text(f) else missing).append(f)
+    # deleting is permanent, so the user confirms in code; the model can't skip this
+    found = [f for f in facts if memory.find_text(f)]
+    missing = [f for f in facts if f not in found]
+    gone = []
+    if found:
+        print("\n[forget] delete these memories?\n" + "\n".join(f"  - {memory.find_text(f)}" for f in found))
+        if input("  y/n: ").strip().lower() in ("y", "yes"):
+            gone = [memory.remove_text(f) for f in found]
+        else:
+            return "The user said no, so nothing was deleted. Ask them which memory they meant."
     out = ("Deleted: " + " | ".join(gone)) if gone else "Nothing was deleted."
     if missing:
         # don't guess: show the real list so the model can copy the exact text and try again
@@ -147,6 +154,22 @@ def add_memory_hint(text):
     if SAVE_CUES.search(text):
         return text + "\n\n(Note from the app: this message may be asking you to save something. If it is, call remember first.)"
     return text
+
+# replies that claim a memory was saved
+CLAIMS_SAVE = re.compile(r"\b(remembered|saved|noted|got it,? i'?ll remember|i'?ll remember|stored)\b", re.I)
+
+def check_fake_save(reply, messages):
+    """Catch the model saying it saved something when it never called remember in this turn."""
+    answer = reply.split("</think>")[-1]
+    if not CLAIMS_SAVE.search(answer):
+        return None
+    # look back to the user's last real message for a remember call
+    for m in reversed(messages):
+        if m["role"] == "user":
+            break
+        if m["role"] == "assistant" and re.search(r'"name":\s*"remember"|^\s*remember\s*\{', m["content"], re.M):
+            return None
+    return "(Note from the app: you said you saved something, but you did not call remember, so nothing was saved. Call remember now with the fact.)"
 
 # the menu: one line per skill, taken from the "Use this when..." line of each file
 menu = "\n".join(

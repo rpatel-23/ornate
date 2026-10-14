@@ -1,6 +1,6 @@
 import os
 import re
-from assistant import system_prompt, respond, unload_skills, read_file, run_quiz, add_memory_hint
+from assistant import system_prompt, respond, unload_skills, read_file, run_quiz, add_memory_hint, check_fake_save
 import memory
 
 messages = [{"role": "system", "content": system_prompt()}]
@@ -69,5 +69,5 @@ while True:
     messages.append({"role": "user", "content": add_memory_hint(user) + attached})
     attached = ""
     print("\nornate: ", end="")
-    respond(messages)
+    respond(messages, check=check_fake_save)
     unload_skills(messages)

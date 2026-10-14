@@ -114,7 +114,7 @@ Settings: 4 layers, 4 heads, 128-dim embeddings, 64-character context, 5,000 ste
 - Style instructions are followed only loosely. The model still adds emojis and sign-offs in plain style, and in roast style it tends to copy its example jokes rather than write new ones.
 - Search depends on an unofficial package, needs internet, and only sees short snippets. A small model can still misread them.
 - An 8B to 30B local model is well below frontier models, especially on long multi-step tasks.
-- Memories are saved to `memory.json` on your machine, which is git-ignored so personal facts never reach GitHub. Ornate sometimes misses a fact mentioned in passing alongside a question, so saying "remember" is the reliable way.
+- Memories are saved to `memory.json` on your machine, which is git-ignored so personal facts never reach GitHub. Ornate sometimes misses a fact mentioned in passing alongside a question, so saying "remember" is the reliable way. When Ornate deletes a memory on its own, it asks you to confirm first, because in testing it once picked the wrong fact.
 - Nothing is fine-tuned yet. The models are stock Qwen3 weights from [mlx-community](https://huggingface.co/mlx-community).
 
 ## Notes
