@@ -18,6 +18,7 @@ I put $26 on a discount-and-tax problem. Ornate picks the missed-question skill 
 - **Thinking helps hard work and hurts quick decisions.** With its reasoning mode on, the model found how I reached a wrong answer on 8 of 9 new problems, against 6 of 9 without it. But it picked the right tool slightly less often (17/18 against 18/18) and took three times as long. So Ornate decides with thinking off and turns it on only after it loads a skill or runs a search.
 - **Search found the right answer, and the model ignored it.** Asked who won the most recent Super Bowl, the correct result was in the search results, and the model still answered with an older game and the wrong winner. Adding today's date to the prompt and thinking after the search fixed it: the model wrote a better query and, on a later question, noticed and explained conflicting results.
 - **Some jobs belong in code, not the model.** Asked to run a quiz itself, the model showed every question at once and reported a score of 1 of 3 when I had 0. Moving turn-taking and scoring into Python fixed it completely.
+- **The model said it saved a memory when it hadn't, and deleted the wrong one.** Told "btw im taking AP Gov", it replied "remembered." without calling the save tool, and a prompt rule against that changed nothing. Asked to forget a sport I never mentioned, it deleted a different sport instead. A code check now catches fake saves, and every delete asks me to confirm.
 
 Full numbers, transcripts, and caveats are in [EVALS.md](EVALS.md).
 
@@ -34,7 +35,7 @@ Full numbers, transcripts, and caveats are in [EVALS.md](EVALS.md).
 | Web search | `assistant.py` | Done |
 | Adaptive thinking | `harness.py` | Done |
 | Math evals | `eval_math.py`, `eval_hard.py` | Done |
-| Skill and routing tests | `eval_skill.py`, `eval_routing.py` | Done |
+| Skill, routing, and memory tests | `eval_skill.py`, `eval_routing.py`, `eval_memory.py` | Done |
 | Personality styles | `styles/`, `agent.py` | Done (plain and roast) |
 | Memory across chats | `memory.py`, `assistant.py` | Done |
 | Web app, then desktop app | | Planned |
@@ -76,9 +77,10 @@ Thinking is automatic by default. `ORNATE_THINK=1` keeps it on for every answer,
 Tests:
 
 ```
-python eval_routing.py   # does it pick the right first move? (22 messages, about 1 minute)
+python eval_routing.py   # does it pick the right first move? (30 messages, about 1.5 minutes)
 python eval_hard.py      # 50 math problems, with and without the Python tool
 python eval_skill.py     # 9 missed questions, graded by reading the output
+python eval_memory.py    # 10 forget requests against a fake memory list
 python gpt.py            # train the tiny GPT (a few minutes)
 ```
 
@@ -110,7 +112,7 @@ Settings: 4 layers, 4 heads, 128-dim embeddings, 64-character context, 5,000 ste
 
 ## Limits
 
-- The math evals have 45 to 50 problems, the skill test 9, and the routing test 22, and I wrote the tests as well as the prompts. Gaps of one or two are not meaningful.
+- The math evals have 45 to 50 problems, the skill test 9, the routing test 30, and the memory test 10, and I wrote the tests as well as the prompts. Gaps of one or two are not meaningful.
 - Style instructions are followed only loosely. The model still adds emojis and sign-offs in plain style, and in roast style it tends to copy its example jokes rather than write new ones.
 - Search depends on an unofficial package, needs internet, and only sees short snippets. A small model can still misread them.
 - An 8B to 30B local model is well below frontier models, especially on long multi-step tasks.
