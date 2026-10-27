@@ -56,7 +56,7 @@ pip install mlx mlx-lm numpy sympy pypdf ddgs
 python agent.py
 ```
 
-The first run downloads Qwen3 30B-A3B (17 GB, needs about 17 GB of memory). It only runs about 3B of its parameters for each token, so it is as fast as an 8B model and scored higher on every test here. For a smaller machine, use the 5 GB model:
+The first run downloads Qwen3 30B-A3B (17 GB, needs about 17 GB of memory). It only runs about 3B of its parameters for each token, so it is as fast as an 8B model. It scored as well as or better than the 8B, 14B, and dense 32B models on every test here, and the 32B was about 8 times slower. For a smaller machine, use the 5 GB model:
 
 ```
 ORNATE_MODEL=mlx-community/Qwen3-8B-4bit python agent.py
