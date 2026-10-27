@@ -185,6 +185,27 @@ How deleting changed:
 2. **By exact text.** The code deletes only on an exact match, and a miss deletes nothing and returns the real list. This fixed the stale numbers but not the basketball case, because "Plays soccer." really is saved. Code can check that a fact exists, not that it is the one the user meant.
 3. **Confirm in code.** The `forget` tool now shows the facts and asks the user y/n before deleting. The model cannot skip it. The eval still counts the basketball case as a fail, because it measures the model, and the model is still wrong.
 
+## 7. A bigger model: 32B dense vs 30B MoE
+
+Qwen3-30B-A3B is a mixture-of-experts model: 30B parameters in total, but only about 3B run for each token. Qwen3-32B is dense, so all 32B run for every token. Same 4-bit size on disk (about 17 to 18 GB), same prompts, same evals; only the model changed.
+
+| | 30B-A3B (MoE) | 32B (dense) |
+|---|---|---|
+| Memory test | 9/10 in 30s | 7/10 in 238s |
+| Routing, model alone | 27/30 in 97s | 27/30 in 749s |
+| Routing, with fake-save check | 28/30 | 27/30 |
+
+The dense model was about 8 times slower and no more accurate.
+
+Where they differed:
+
+- **Better on two things.** The 32B actually called `remember` for "btw im taking AP Gov this year" instead of replying "remembered." with no save, and it answered "quickly explain standard deviation" without running Python.
+- **Worse on skills.** It missed two missed-question messages that the 30B passed on every run: it ran Python for "I put 81 for 3 to the power of 3" and answered the free speech question directly without loading the skill.
+- **Worse deletes.** Asked to delete "everything about my classes", it also deleted every other saved fact. Asked "dont forget my SAT is on December 5", it saved the date and then deleted it. Both were scored as bad tool calls because it put two calls in one block, but reading both calls would have been worse.
+- **Same mistakes.** Both models deleted "Plays soccer." when asked to forget basketball, and both missed the fact mentioned alongside a question ("im a junior and want to major in CS..."). Since a bigger model made the same mistakes, these look like design problems, which supports handling them in code (the y/n confirm on deletes) rather than waiting for a smarter model.
+
+Ornate keeps the 30B-A3B: same or better accuracy, at a speed that works for chat.
+
 ## Caveats
 
 - 45 to 50 problems per set. A gap of one or two questions is noise.

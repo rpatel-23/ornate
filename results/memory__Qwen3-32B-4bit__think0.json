@@ -1,0 +1,97 @@
+{
+  "model": "mlx-community/Qwen3-32B-4bit",
+  "thinking": false,
+  "score": 7,
+  "records": [
+    {
+      "message": "forget that i take ap stats",
+      "expect": "forget",
+      "facts": [
+        "Takes AP Stats."
+      ],
+      "got": "forget",
+      "correct": true,
+      "reply": "<tool_call>\n{\"name\": \"forget\", \"arguments\": {\"facts\": [\"Takes AP Stats.\"]}}\n</tool_call>"
+    },
+    {
+      "message": "i quit soccer, delete that from your memory",
+      "expect": "forget",
+      "facts": [
+        "Plays soccer."
+      ],
+      "got": "forget",
+      "correct": true,
+      "reply": "<tool_call>\n{\"name\": \"forget\", \"arguments\": {\"facts\": [\"Plays soccer.\"]}}\n</tool_call>"
+    },
+    {
+      "message": "forget my sat date and that i like short answers",
+      "expect": "forget",
+      "facts": [
+        "SAT is on December 5.",
+        "Likes short answers."
+      ],
+      "got": "forget",
+      "correct": true,
+      "reply": "<tool_call>\n{\"name\": \"forget\", \"arguments\": {\"facts\": [\"SAT is on December 5.\", \"Likes short answers.\"]}}\n</tool_call>"
+    },
+    {
+      "message": "delete everything you know about my classes",
+      "expect": "forget",
+      "facts": [
+        "Takes AP Stats.",
+        "Takes AP Precalculus."
+      ],
+      "got": "bad tool call",
+      "correct": false,
+      "reply": "<tool_call>\n{\"name\": \"forget\", \"arguments\": {\"facts\": [\"Takes AP Stats.\", \"Takes AP Precalculus.\"]}}\n\n{\"name\": \"forget\", \"arguments\": {\"facts\": [\"Likes short answers.\", \"Plays soccer.\", \"SAT is on December 5.\"]}}\n</tool_call>"
+    },
+    {
+      "message": "can you forget i said i like short answers",
+      "expect": "forget",
+      "facts": [
+        "Likes short answers."
+      ],
+      "got": "forget",
+      "correct": true,
+      "reply": "<tool_call>\n{\"name\": \"forget\", \"arguments\": {\"facts\": [\"Likes short answers.\"]}}\n</tool_call>"
+    },
+    {
+      "message": "forget that i play basketball",
+      "expect": "none",
+      "got": "forget",
+      "correct": false,
+      "reply": "<tool_call>\n{\"name\": \"forget\", \"arguments\": {\"facts\": [\"Plays soccer.\"]}}\n</tool_call>"
+    },
+    {
+      "message": "dont forget my sat is on december 5",
+      "expect": [
+        "none",
+        "remember"
+      ],
+      "got": "bad tool call",
+      "correct": false,
+      "reply": "<tool_call>\n{\"name\": \"remember\", \"arguments\": {\"facts\": [\"SAT is on December 5.\"]}}\n\n{\"name\": \"forget\", \"arguments\": {\"facts\": [\"SAT is on December 5.\"]}}\n</tool_call>"
+    },
+    {
+      "message": "i forgot my calculator at home lol, what's a trick for 15% tips",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "reply": "15% tips can be calculated mentally by breaking it down into simpler steps:\n\n1. Find 10% of the amount by moving the decimal point one place leftward.\n2. Find half of that amount (which represents 5%).\n3. Add the two amounts together.\n\nFor example, if the bill is $40:\n- 10% of $40 = $4.\n- Half of $4 = $2 (which represents 5%).\n- Total tip = $4 + $2 = $6.\n\nThis trick works for any amount!"
+    },
+    {
+      "message": "what do you know about me?",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "reply": "- Takes AP Stats.\n- Takes AP Precalculus.\n- Likes short answers.\n- Plays soccer.\n- SAT is on December 5."
+    },
+    {
+      "message": "remind me, when is my SAT?",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "reply": "You mentioned your SAT is on December 5, 2026."
+    }
+  ]
+}
