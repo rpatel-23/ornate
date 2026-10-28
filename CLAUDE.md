@@ -46,6 +46,7 @@ python eval_hard.py / eval_skill.py # math and missed-question evals
 
 - Evals rerun 2026-10-28: routing 30/30, memory 12/13 (model alone and with code check). `forget` now refuses unless the user's message asks to delete (`is_delete_request`), and the forget rule was removed from the prompt because it made "what do you know about me?" call forget. Remaining memory miss: "forget that i play basketball" deletes "Plays soccer." (stopped only by the "are you sure").
 - Multi-turn behavior isn't covered by any eval (all routing tests are single messages).
+- The web page used to show "(no reply)" when the model wrote its answer inside a thinking block it never closed (seen after the missed-question skill). `ask_model` now sends that text to the page, like the terminal does.
 - `run_python` is not sandboxed. LaTeX math shows raw in the web app. One conversation at a time, no saved chats.
 - The 30B MoE beat a dense 32B (same or better scores, ~8x faster), so Ornate stays on the 30B.
 

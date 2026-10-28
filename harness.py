@@ -93,6 +93,12 @@ def ask_model(messages, use_tools, show, think=None, emit=None):
                 continue
             print(visible[shown:], end="", flush=True)
             shown = len(visible)
+    if emit and sent == 0 and "<think>" in reply and "</think>" not in reply and "<tool_call>" not in reply:
+        # the model sometimes writes its whole answer inside a thinking block it never closes.
+        # The page hides thinking, so it would get nothing ("(no reply)"); send what it wrote instead, like the terminal does.
+        inside = reply.split("<think>")[-1].strip()
+        if inside:
+            emit({"type": "text", "text": inside})
     if show:
         if "<think>" in reply and "</think>" not in reply:
         # the model never closed its thinking, so show what it wrote
