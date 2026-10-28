@@ -1,141 +1,127 @@
 # Ornate
 
-A local AI agent that runs entirely on a MacBook, in the terminal or in a chat page in the browser. It chats, runs Python to check its math, searches the web when it needs current information, reads files I attach, remembers what I ask it to across chats, and loads skills on its own for specific jobs, such as working out exactly how I got a practice question wrong or running an interactive quiz. The agent loop, skills, and evals are written from scratch with no agent framework, and the project started with a small GPT built by hand to understand what is inside the model.
+**A local AI agent that runs entirely on a MacBook.** No cloud model, no API key: a 30B-parameter open model, an agent loop written from scratch, and a chat app in the browser.
 
-Runs on Apple Silicon with [MLX](https://github.com/ml-explore/mlx). Everything runs offline except the optional web search, and nothing needs an API key.
-
-Built and tested on a MacBook Pro with an Apple M1 Max and 64 GB of memory, macOS 26.6.2. All speeds and timings in this repo come from that machine.
+Ornate can run Python to check its math, search the web, read PDFs, remember things across chats, and load skills on its own, such as working out exactly how I got a practice question wrong. Every part is measured with evals I wrote, and the most useful results were the failures they caught.
 
 ![Ornate loading its missed-question skill, thinking, and naming the exact mistake behind a wrong answer of $26](demo.png)
 
-I put $26 on a discount-and-tax problem. Ornate picks the missed-question skill on its own, turns on thinking, and finds the exact mistake: both percentages taken off the original price, $40 - $10 - $4 = $26.
+*I put $26 on a discount-and-tax problem. Ornate loads its missed-question skill on its own, turns on thinking, and finds the exact slip: both discounts taken off the original price, $40 − $10 − $4 = $26.*
 
-## What I found
+## Features
 
-- **Giving a model a calculator can make it worse.** A 14B model scored 48/50 on math problems by reasoning alone and 46/50 with a Python tool. Told to use code for any calculation, it stopped thinking, wrote quick wrong scripts, and reported impossible answers such as a 30 mph average for legs driven at 50 and 75 mph.
-- **My tool was quietly broken, and the score hid it.** Models often end code with a bare variable, like a notebook cell. My tool returned nothing for that, and the model retried until it ran out of turns. Fixing it took the 8B from 45/50 to 49/50. I only found it by reading transcripts.
-- **A prompt that fixed every failure on one test did not hold up on a new one.** A "reason first, then check your answer" prompt took the 14B from 46/50 to 50/50. On 45 fresh problems it gained at most one question, at 50% more time. Most of the gain came from fitting the prompt to the test it was written for.
-- **Thinking helps hard work and hurts quick decisions.** With its reasoning mode on, the model found how I reached a wrong answer on 8 of 9 new problems, against 6 of 9 without it. But it picked the right tool slightly less often (17/18 against 18/18) and took three times as long. So Ornate decides with thinking off and turns it on only after it loads a skill or runs a search.
-- **Search found the right answer, and the model ignored it.** Asked who won the most recent Super Bowl, the correct result was in the search results, and the model still answered with an older game and the wrong winner. Adding today's date to the prompt and thinking after the search fixed it: the model wrote a better query and, on a later question, noticed and explained conflicting results.
-- **A bigger model was slower and no better.** A dense 32B model ran about 8 times slower than the 30B mixture-of-experts model Ornate uses, scored the same or lower on every test, and made worse deletions, such as wiping every memory when asked to forget only my classes. Both models made the same wrong delete in one case, so that fix belongs in code, not in a bigger model.
-- **Some jobs belong in code, not the model.** Asked to run a quiz itself, the model showed every question at once and reported a score of 1 of 3 when I had 0. Moving turn-taking and scoring into Python fixed it completely.
-- **The model said it saved a memory when it hadn't, and deleted the wrong one.** Told "btw im taking AP Gov", it replied "remembered." without calling the save tool, and a prompt rule against that changed nothing. Asked to forget a sport I never mentioned, it deleted a different sport instead. Now code decides both: a memory is saved only when my message asks for it, and a delete happens only after I answer "yes" in the chat.
-- **My safety check caused the bug it was built to stop.** To catch fake saves, I scanned the model's answers for words like "stored". Then "explain photosynthesis" came back as "Already saved." The explanation said energy is *stored* in glucose, the check told the model it had faked a save, and the model obeyed. None of my tests caught it, because they only used memory messages. The check now looks only at what I typed, and `test_checks.py` includes normal sentences that must never trigger it.
+| | |
+|---|---|
+| **Agent loop** | Written from scratch, no framework. The model calls tools, the harness runs them and loops until it answers. |
+| **Tools** | Python execution, web search, PDF and text files, memory |
+| **Skills** | Instruction files the model loads on its own when a request matches (mistake analysis, quizzes) |
+| **Adaptive thinking** | Off for quick decisions, on after a skill or search, when the hard reasoning starts |
+| **Memory** | Saves only when asked; deletes only after a "yes" in the chat |
+| **Web app** | Streaming answers, tool status, message queue, memory panel, copy buttons |
+| **Evals** | Math, routing, skills, memory, and model comparisons, with saved transcripts |
 
-Full numbers, transcripts, and caveats are in [EVALS.md](EVALS.md).
+## Quick start
 
-## What is built
-
-| Part | Files | Status |
-|---|---|---|
-| Tiny GPT from scratch | `tokenizer.py`, `data.py`, `bigram.py`, `gpt.py` | Done |
-| Agent loop with tools | `harness.py`, `assistant.py`, `agent.py` | Done |
-| Python tool for math | `harness.py` | Done |
-| File attachments (text and PDF) | `files.py` | Done |
-| Skills, picked automatically | `skills/`, `assistant.py` | Done (two skills) |
-| Quizzes run by code | `quiz.py` | Done |
-| Web search | `assistant.py` | Done |
-| Adaptive thinking | `harness.py` | Done |
-| Math evals | `eval_math.py`, `eval_hard.py` | Done |
-| Skill, routing, and memory tests | `eval_skill.py`, `eval_routing.py`, `eval_memory.py`, `test_checks.py` | Done |
-| Personality styles | `styles/`, `agent.py` | Done (plain and roast) |
-| Memory across chats | `memory.py`, `assistant.py` | Done |
-| Web app: streaming chat, message queue, memory panel | `server.py`, `static/index.html` | Done (first version) |
-| Saved chats, then desktop app | | Planned |
-| Search over class notes (RAG) | | Planned |
-| Reading photos of worksheets | | Planned |
-| Fine-tuning with before/after evals | | Planned |
-
-## Run it
-
-Requires a Mac with Apple Silicon.
+Requires a Mac with Apple Silicon and about 17 GB of free memory. Built and tested on a MacBook Pro (M1 Max, 64 GB); all timings in this repo come from that machine.
 
 ```
 git clone https://github.com/rpatel-23/ornate.git
 cd ornate
 python3 -m venv .venv && source .venv/bin/activate
-pip install mlx mlx-lm numpy sympy pypdf ddgs
+pip install mlx mlx-lm numpy sympy pypdf ddgs fastapi uvicorn
+```
+
+**Chat in the browser:**
+
+```
+uvicorn server:app --port 8000
+```
+
+Then open http://localhost:8000.
+
+**Or in the terminal:**
+
+```
 python agent.py
 ```
 
-The first run downloads Qwen3 30B-A3B (17 GB, needs about 17 GB of memory). It only runs about 3B of its parameters for each token, so it is as fast as an 8B model. It scored as well as or better than the 8B, 14B, and dense 32B models on every test here, and the 32B was about 8 times slower. For a smaller machine, use the 5 GB model:
+The first run downloads Qwen3 30B-A3B (17 GB). For a smaller machine, use the 8B model (5 GB):
 
 ```
 ORNATE_MODEL=mlx-community/Qwen3-8B-4bit python agent.py
 ```
 
-Just type normally. Ornate decides on its own whether to explain a missed question, start a quiz, run Python, search the web, save or delete a memory, or answer directly. A few commands are also available:
+Terminal commands: `/file <path>` attaches a file, `/quiz <topic>` starts a quiz, `/style roast` or `/style plain` switches personality, `/memory` and `/forget <n>` manage memory, `q` quits.
 
-| Command | What it does |
-|---|---|
-| `/file <path>` | Attaches a text file or PDF to your next message |
-| `/quiz <topic>` or `/quiz 3 <topic>` | Runs a quiz, using any attached file as the material |
-| `/style roast`, `/style plain`, `/style` | Switches personality for the rest of the chat, or lists the styles |
-| `/memory` | Lists what Ornate remembers about you |
-| `/forget <number>` | Deletes a memory by its number in `/memory` |
-| `q` | Quits |
+## What I found
 
-To use the chat page instead of the terminal:
+Full numbers and transcripts are in [EVALS.md](EVALS.md).
 
-```
-pip install fastapi uvicorn
-uvicorn server:app --port 8000
-```
-
-Then open http://localhost:8000. Answers stream in as they are written, tools show a status line ("searching the web…"), messages sent while it is busy wait in a queue, and the Memory button lists and deletes saved facts.
-
-Thinking is automatic by default. `ORNATE_THINK=1` keeps it on for every answer, and `ORNATE_THINK=0` turns it off.
-
-Tests:
-
-```
-python eval_routing.py   # does it pick the right first move? (30 messages, about 1.5 minutes)
-python eval_hard.py      # 50 math problems, with and without the Python tool
-python eval_skill.py     # 9 missed questions, graded by reading the output
-python eval_memory.py    # 10 forget requests against a fake memory list
-python test_checks.py    # the code checks for saving, no model needed (under a second)
-python gpt.py            # train the tiny GPT (a few minutes)
-```
+- **A calculator made the model worse.** A 14B model scored 48/50 on math by reasoning and 46/50 with a Python tool. Told to use code for every calculation, it stopped thinking and trusted quick, wrong scripts.
+- **The score hid a broken tool.** My Python tool returned nothing when code ended with a bare variable, so the model retried until it ran out of turns. Fixing it took the 8B from 45/50 to 49/50. I found it by reading transcripts, not scores.
+- **A prompt that aced one test didn't generalize.** A new prompt took the 14B from 46/50 to 50/50. On 45 fresh problems it gained at most one question. Most of the gain came from fitting the prompt to the test.
+- **Thinking helps hard work and hurts quick decisions.** With thinking on, the model found my exact mistake on 8 of 9 problems instead of 6, but routed slightly worse and took three times as long. So Ornate thinks only after it picks a skill or searches.
+- **Search found the answer and the model ignored it.** The correct Super Bowl result was in its search results, and it answered with an older game. Putting today's date in the prompt and thinking after a search fixed it.
+- **A bigger model was slower and no better.** A dense 32B model ran about 8 times slower than the 30B mixture-of-experts model Ornate uses, scored the same or lower, and made worse deletions.
+- **Anything that matters should be decided by code, not the model.** The model mis-scored quizzes, said "remembered." without saving, and deleted the wrong fact when asked to forget something it didn't have. Quiz scoring, saving, and deleting are now handled in Python.
+- **A safety check caused the bug it was built to stop.** To catch fake saves, I scanned answers for words like "stored". Then a photosynthesis explanation ("energy is stored in glucose") came back as "Already saved." The check now looks only at what the user typed, and `test_checks.py` covers ordinary sentences that must never trigger it.
 
 ## How it works
 
-**Agent loop.** A language model can only produce text. `harness.py` describes the available tools in the prompt. When the model replies with a tool call, the harness runs it, adds the result to the conversation, and asks again, for up to five rounds, then gives the model one final turn to answer. Tools are registered with `add_tool`, so adding one is a single function.
+```
+your message ──► system prompt (date, tools, skills, memory) ──► model
+                                                                  │
+                         ┌──────── tool call? ◄───────────────────┘
+                         │ yes                      │ no
+                         ▼                          ▼
+              harness runs the tool            final answer
+              and adds the result
+                         │
+                         └──► back to the model (up to 5 rounds)
+```
 
-**Tools.** `run_python` runs model-written code in a separate process with a 10-second timeout (not sandboxed yet) and prints a bare last value the way a notebook does. `web_search` returns five results from DuckDuckGo, labeled as website text so the model treats them as information and not as instructions. `load_skill` and `start_quiz` are described below.
+- **Agent loop** (`harness.py`). The model can only produce text, so tools are described in the prompt. When it writes a tool call, the harness runs it, adds the result to the conversation, and asks again.
+- **Tools** (`assistant.py`). `run_python` runs code in a separate process with a 10-second timeout. `web_search` returns five DuckDuckGo results, labeled as website text so the model treats them as information, not instructions.
+- **Skills** (`skills/`). Markdown files listed in the prompt with one line each. The model loads the full file when a request matches, and the harness removes it after the answer so it doesn't leak into later messages.
+- **Quizzes** (`quiz.py`). The model writes the questions as JSON once; Python runs the quiz and keeps score.
+- **Memory** (`memory.py`). Facts are stored in `memory.json` and added to every prompt. Code checks the user's message before any save, and deletes only after a "yes".
+- **Web app** (`server.py`, `static/index.html`). A FastAPI server streams each piece of the answer to the page as JSON, with tool events. A lock queues requests, since one model writes one answer at a time. The page is one file with no outside libraries.
+- **Tiny GPT** (`gpt.py`). Before using a real model, I wrote a character-level transformer and trained it on Shakespeare to understand what is inside one: 816,705 parameters, validation loss 1.62 against 4.17 for random guessing.
 
-**Skills.** A skill is a Markdown file of instructions in `skills/`. The system prompt lists each skill with one line saying when to use it. When a message matches, the model calls `load_skill`, gets the full file, and follows it. After the answer, the harness removes the skill text from the conversation so it does not leak into later messages. `missed-question` gives the correct answer, my answer, the skill tested, the method, the exact slip with the wrong calculation written out, a miss type, a rule to remember, and a Desmos check. The format comes from how I already review SAT practice.
+## Tests
 
-**Quizzes.** `quiz.py` asks the model once for questions as JSON: the question, the correct answer, three wrong answers, an explanation, and the most tempting trap. Plain Python then runs the quiz one question at a time with shuffled choices, a running score, and a list of what was missed. The results go back into the chat so follow-up questions work.
+```
+python test_checks.py    # code-side checks for memory, no model needed (under a second)
+python eval_routing.py   # does it pick the right first move? (30 messages)
+python eval_memory.py    # forget requests against a fake memory list
+python eval_hard.py      # 50 math problems, with and without the Python tool
+python eval_skill.py     # 9 missed questions, graded by reading the output
+```
 
-**Adaptive thinking.** Each answer starts with thinking off, so choosing what to do stays fast. If the model loads a skill or searches the web, thinking turns on for the rest of that answer. Today's date is in the system prompt so "most recent" means something.
-
-**Styles.** A style is a Markdown file in `styles/` added to the end of the system prompt, and unlike a skill it stays on for the whole chat. `plain` is the default: concise, no emojis, no sign-offs. `roast` is a teasing, deadpan tutor voice with rules for reading the room: match the user's energy, drop the jokes when they sound stressed, and keep every fact and skill format exactly as in plain style. Telling it to "chill" or "relax" switches back to plain in code, because the model kept joking one message after agreeing to stop.
-
-**Memory.** Saved facts live in `memory.json` and go into the system prompt every turn. Code decides when memory changes, not the model. `remember` refuses unless my latest message asks to save something ("rmbr", "remember that", "save this", "don't forget"), and "I can't remember the formula" does not count. `forget` never deletes right away: it holds the facts, the model asks "are you sure you want me to forget...", and code deletes them only if my next message is a yes.
-
-**Web app.** `server.py` wraps the same agent loop in a FastAPI server. The model runs in a background thread and streams each piece of text to the page as a line of JSON, along with tool events. A lock makes requests wait their turn, since one model can only write one answer at a time. `static/index.html` is a single file with no outside libraries, so it works offline.
-
-**File attachments.** `files.py` reads plain text and extracts text from PDFs with `pypdf`. The text is added to the message, so to the model an attachment is just more text. Files over 30,000 characters are cut off with a note.
-
-**Tiny GPT.** A character-level transformer trained on the complete works of Shakespeare (about 1.1M characters), written to understand each part of a language model.
-
-| Model | Parameters | Train loss | Val loss |
-|---|---|---|---|
-| Random guessing | n/a | 4.17 | 4.17 |
-| Bigram | 4,225 | ~2.4 | not measured |
-| Tiny GPT | 816,705 | ~1.45 | 1.62 |
-
-Settings: 4 layers, 4 heads, 128-dim embeddings, 64-character context, 5,000 steps, batch size 32, AdamW at 1e-3. The bigram and the GPT share the same data and training loop. The only difference is attention.
+Results are saved to `results/` with full transcripts.
 
 ## Limits
 
-- The math evals have 45 to 50 problems, the skill test 9, the routing test 30, and the memory test 10, and I wrote the tests as well as the prompts. Gaps of one or two are not meaningful.
-- Style instructions are followed only loosely. The model still adds emojis and sign-offs in plain style, and in roast style it tends to copy its example jokes rather than write new ones.
-- Search depends on an unofficial package, needs internet, and only sees short snippets. A small model can still misread them.
-- An 8B to 30B local model is well below frontier models, especially on long multi-step tasks.
-- Memories are saved to `memory.json` on your machine, which is git-ignored so personal facts never reach GitHub. Ornate saves only when you ask, so facts mentioned in passing are not kept.
-- The web app keeps one conversation at a time and does not save chats yet. Math written in LaTeX shows as raw text.
-- Nothing is fine-tuned yet. The models are stock Qwen3 weights from [mlx-community](https://huggingface.co/mlx-community).
+- A 30B local model is well below frontier models, especially on long, multi-step tasks.
+- The test sets are small (9 to 50 items), and I wrote both the tests and the prompts. Gaps of one or two are noise.
+- `run_python` runs model-written code on the machine without a sandbox.
+- Web search uses an unofficial package and only sees short snippets.
+- The web app keeps one conversation at a time, and math written in LaTeX shows as raw text.
+- Nothing is fine-tuned. The models are stock Qwen3 weights from [mlx-community](https://huggingface.co/mlx-community).
+- Memories stay in `memory.json` on your machine, which is git-ignored.
+
+## Roadmap
+
+- [x] Tiny GPT from scratch
+- [x] Agent loop, tools, skills, and evals
+- [x] Memory
+- [x] Web app with streaming
+- [ ] Saved chats and a design pass
+- [ ] Reading photos of worksheets (vision)
+- [ ] Search over class notes (RAG)
+- [ ] Running code in more languages, in a sandbox
+- [ ] Fine-tuning with before and after evals
+- [ ] Windows port for an RTX 4070 laptop
 
 ## Notes
 
