@@ -1,12 +1,39 @@
+<div align="center">
+
 # Ornate
 
-**A local AI agent that runs entirely on a MacBook.** No cloud model, no API key: a 30B-parameter open model, an agent loop written from scratch, and a chat app in the browser.
+**A local AI agent that runs entirely on a MacBook.**<br>
+No cloud model, no API key: a 30B open model, an agent loop written from scratch, and a chat app in the browser.
+
+![Runs on Apple Silicon](https://img.shields.io/badge/runs_on-Apple_Silicon-000000?logo=apple&logoColor=white)
+![Model: Qwen3 30B-A3B](https://img.shields.io/badge/model-Qwen3_30B--A3B_4--bit-5b8cff)
+![Python](https://img.shields.io/badge/python-3-3776AB?logo=python&logoColor=white)
+![No API key](https://img.shields.io/badge/API_key-none-2ea44f)
+
+[Features](#features) · [Quick start](#quick-start) · [Results](#results-at-a-glance) · [What I found](#what-i-found) · [How it works](#how-it-works) · [Full evals](EVALS.md)
+
+<img src="demo-web.png" alt="Ornate in the browser: it loads its missed-question skill, runs Python, and names the exact slip behind a wrong answer of $26" width="860">
+
+<sub>I put $26 on a discount-and-tax problem. Ornate loads its missed-question skill on its own, checks the math in Python, and finds the slip: both percentages taken off the original price, $40 − $10 − $4 = $26.</sub>
+
+</div>
+
+<br>
 
 Ornate can run Python to check its math, search the web, read PDFs, remember things across chats, and load skills on its own, such as working out exactly how I got a practice question wrong. Every part is measured with evals I wrote, and the most useful results were the failures they caught.
 
-![Ornate loading its missed-question skill, thinking, and naming the exact mistake behind a wrong answer of $26](demo.png)
+## Results at a glance
 
-*I put $26 on a discount-and-tax problem. Ornate loads its missed-question skill on its own, turns on thinking, and finds the exact slip: both discounts taken off the original price, $40 − $10 − $4 = $26.*
+All on the 30B-A3B model unless noted. Each set is small, so a gap of one or two is noise.
+
+| Eval | Result |
+|---|---|
+| Math, 50 hard problems | **50/50** with the Python tool, 48/50 without |
+| Math, 45 problems the prompt never saw | **45/45** with the reasoning prompt, 44/45 with the original |
+| Naming the exact mistake behind a wrong answer, 9 problems | **8/9** with thinking, 6/9 without |
+| Picking the right first move, 30 messages | **30/30** |
+| Saving and forgetting on a fake memory list, 13 messages | **12/13** |
+| 30B mixture-of-experts vs 32B dense | about **8× faster**, same or better scores |
 
 ## Features
 
@@ -53,6 +80,14 @@ ORNATE_MODEL=mlx-community/Qwen3-8B-4bit python agent.py
 
 Terminal commands: `/file <path>` attaches a file, `/quiz <topic>` starts a quiz, `/style roast` or `/style plain` switches personality, `/memory` and `/forget <n>` manage memory, `q` quits.
 
+<details>
+<summary>What the terminal version looks like</summary>
+<br>
+
+![Ornate in the terminal: it loads its missed-question skill, thinks, and names the exact mistake behind a wrong answer of $26](demo.png)
+
+</details>
+
 ## What I found
 
 Full numbers and transcripts are in [EVALS.md](EVALS.md).
@@ -69,16 +104,13 @@ Full numbers and transcripts are in [EVALS.md](EVALS.md).
 
 ## How it works
 
-```
-your message ──► system prompt (date, tools, skills, memory) ──► model
-                                                                  │
-                         ┌──────── tool call? ◄───────────────────┘
-                         │ yes                      │ no
-                         ▼                          ▼
-              harness runs the tool            final answer
-              and adds the result
-                         │
-                         └──► back to the model (up to 5 rounds)
+```mermaid
+flowchart LR
+    A([Your message]) --> B[System prompt<br/>date, tools, skills, memory]
+    B --> C{Model}
+    C -- tool call --> D[Harness runs the tool<br/>and adds the result]
+    D -- up to 5 rounds --> C
+    C -- no tool call --> E([Final answer])
 ```
 
 - **Agent loop** (`harness.py`). The model can only produce text, so tools are described in the prompt. When it writes a tool call, the harness runs it, adds the result to the conversation, and asks again.

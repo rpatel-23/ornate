@@ -53,5 +53,4 @@ python eval_hard.py / eval_skill.py # math and missed-question evals
 ## Next up
 
 1. Web app: sidebar with saved chats, then a design pass (blue accent, LaTeX rendering, drag-and-drop files).
-2. New web screenshot for demo.png (no personal info).
-3. Then: vision, RAG over class notes, multi-language code runner with a sandbox, fine-tuning with before/after evals, Windows port (RTX 4070, 8 GB VRAM).
+2. Then: vision, RAG over class notes, multi-language code runner with a sandbox, fine-tuning with before/after evals, Windows port (RTX 4070, 8 GB VRAM).
