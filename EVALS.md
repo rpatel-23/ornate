@@ -185,6 +185,18 @@ How deleting changed:
 2. **By exact text.** The code deletes only on an exact match, and a miss deletes nothing and returns the real list. This fixed the stale numbers but not the basketball case, because "Plays soccer." really is saved. Code can check that a fact exists, not that it is the one the user meant.
 3. **Confirm in code.** The `forget` tool now shows the facts and asks the user y/n before deleting. The model cannot skip it. The eval still counts the basketball case as a fail, because it measures the model, and the model is still wrong.
 
+### Later changes to memory
+
+Using Ornate in the web app turned up a bug the evals missed. "Explain photosynthesis in detail" came back as "Already saved." The fake-save check scanned the model's answer for words like "stored", found "energy is stored in glucose", and told the model to call `remember`. Every memory test used memory-related messages, so nothing tested an ordinary answer that happens to contain those words.
+
+After that, memory changes are decided only by the user's message:
+
+- `remember` refuses unless the latest message is an explicit request ("rmbr", "save this", "don't forget"). Ornate no longer saves facts mentioned in passing, so "btw im taking AP Gov" and "im a junior..." now expect no tool in the routing test.
+- `forget` holds the facts and the model asks "are you sure?". Code deletes them only if the next message is a yes. This replaced the y/n prompt, which had stopped working in the web app because it waited for input in the server's terminal.
+- `test_checks.py` runs these checks without the model: 11 messages for "is this a save request" and 6 answers for "does this claim a save", including the photosynthesis sentence.
+
+The routing and memory evals have not been rerun since these changes.
+
 ## 7. A bigger model: 32B dense vs 30B MoE
 
 Qwen3-30B-A3B is a mixture-of-experts model: 30B parameters in total, but only about 3B run for each token. Qwen3-32B is dense, so all 32B run for every token. Same 4-bit size on disk (about 17 to 18 GB), same prompts, same evals; only the model changed.

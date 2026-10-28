@@ -1,6 +1,6 @@
 # Ornate
 
-A local AI agent that runs entirely on a MacBook. It chats, runs Python to check its math, searches the web when it needs current information, reads files I attach, remembers facts about me across chats, and loads skills on its own for specific jobs, such as working out exactly how I got a practice question wrong or running an interactive quiz. The agent loop, skills, and evals are written from scratch with no agent framework, and the project started with a small GPT built by hand to understand what is inside the model.
+A local AI agent that runs entirely on a MacBook, in the terminal or in a chat page in the browser. It chats, runs Python to check its math, searches the web when it needs current information, reads files I attach, remembers what I ask it to across chats, and loads skills on its own for specific jobs, such as working out exactly how I got a practice question wrong or running an interactive quiz. The agent loop, skills, and evals are written from scratch with no agent framework, and the project started with a small GPT built by hand to understand what is inside the model.
 
 Runs on Apple Silicon with [MLX](https://github.com/ml-explore/mlx). Everything runs offline except the optional web search, and nothing needs an API key.
 
@@ -19,7 +19,8 @@ I put $26 on a discount-and-tax problem. Ornate picks the missed-question skill 
 - **Search found the right answer, and the model ignored it.** Asked who won the most recent Super Bowl, the correct result was in the search results, and the model still answered with an older game and the wrong winner. Adding today's date to the prompt and thinking after the search fixed it: the model wrote a better query and, on a later question, noticed and explained conflicting results.
 - **A bigger model was slower and no better.** A dense 32B model ran about 8 times slower than the 30B mixture-of-experts model Ornate uses, scored the same or lower on every test, and made worse deletions, such as wiping every memory when asked to forget only my classes. Both models made the same wrong delete in one case, so that fix belongs in code, not in a bigger model.
 - **Some jobs belong in code, not the model.** Asked to run a quiz itself, the model showed every question at once and reported a score of 1 of 3 when I had 0. Moving turn-taking and scoring into Python fixed it completely.
-- **The model said it saved a memory when it hadn't, and deleted the wrong one.** Told "btw im taking AP Gov", it replied "remembered." without calling the save tool, and a prompt rule against that changed nothing. Asked to forget a sport I never mentioned, it deleted a different sport instead. A code check now catches fake saves, and every delete asks me to confirm.
+- **The model said it saved a memory when it hadn't, and deleted the wrong one.** Told "btw im taking AP Gov", it replied "remembered." without calling the save tool, and a prompt rule against that changed nothing. Asked to forget a sport I never mentioned, it deleted a different sport instead. Now code decides both: a memory is saved only when my message asks for it, and a delete happens only after I answer "yes" in the chat.
+- **My safety check caused the bug it was built to stop.** To catch fake saves, I scanned the model's answers for words like "stored". Then "explain photosynthesis" came back as "Already saved." The explanation said energy is *stored* in glucose, the check told the model it had faked a save, and the model obeyed. None of my tests caught it, because they only used memory messages. The check now looks only at what I typed, and `test_checks.py` includes normal sentences that must never trigger it.
 
 Full numbers, transcripts, and caveats are in [EVALS.md](EVALS.md).
 
@@ -36,10 +37,11 @@ Full numbers, transcripts, and caveats are in [EVALS.md](EVALS.md).
 | Web search | `assistant.py` | Done |
 | Adaptive thinking | `harness.py` | Done |
 | Math evals | `eval_math.py`, `eval_hard.py` | Done |
-| Skill, routing, and memory tests | `eval_skill.py`, `eval_routing.py`, `eval_memory.py` | Done |
+| Skill, routing, and memory tests | `eval_skill.py`, `eval_routing.py`, `eval_memory.py`, `test_checks.py` | Done |
 | Personality styles | `styles/`, `agent.py` | Done (plain and roast) |
 | Memory across chats | `memory.py`, `assistant.py` | Done |
-| Web app, then desktop app | | Planned |
+| Web app: streaming chat, message queue, memory panel | `server.py`, `static/index.html` | Done (first version) |
+| Saved chats, then desktop app | | Planned |
 | Search over class notes (RAG) | | Planned |
 | Reading photos of worksheets | | Planned |
 | Fine-tuning with before/after evals | | Planned |
@@ -73,6 +75,15 @@ Just type normally. Ornate decides on its own whether to explain a missed questi
 | `/forget <number>` | Deletes a memory by its number in `/memory` |
 | `q` | Quits |
 
+To use the chat page instead of the terminal:
+
+```
+pip install fastapi uvicorn
+uvicorn server:app --port 8000
+```
+
+Then open http://localhost:8000. Answers stream in as they are written, tools show a status line ("searching the web…"), messages sent while it is busy wait in a queue, and the Memory button lists and deletes saved facts.
+
 Thinking is automatic by default. `ORNATE_THINK=1` keeps it on for every answer, and `ORNATE_THINK=0` turns it off.
 
 Tests:
@@ -82,6 +93,7 @@ python eval_routing.py   # does it pick the right first move? (30 messages, abou
 python eval_hard.py      # 50 math problems, with and without the Python tool
 python eval_skill.py     # 9 missed questions, graded by reading the output
 python eval_memory.py    # 10 forget requests against a fake memory list
+python test_checks.py    # the code checks for saving, no model needed (under a second)
 python gpt.py            # train the tiny GPT (a few minutes)
 ```
 
@@ -98,6 +110,10 @@ python gpt.py            # train the tiny GPT (a few minutes)
 **Adaptive thinking.** Each answer starts with thinking off, so choosing what to do stays fast. If the model loads a skill or searches the web, thinking turns on for the rest of that answer. Today's date is in the system prompt so "most recent" means something.
 
 **Styles.** A style is a Markdown file in `styles/` added to the end of the system prompt, and unlike a skill it stays on for the whole chat. `plain` is the default: concise, no emojis, no sign-offs. `roast` is a teasing, deadpan tutor voice with rules for reading the room: match the user's energy, drop the jokes when they sound stressed, and keep every fact and skill format exactly as in plain style. Telling it to "chill" or "relax" switches back to plain in code, because the model kept joking one message after agreeing to stop.
+
+**Memory.** Saved facts live in `memory.json` and go into the system prompt every turn. Code decides when memory changes, not the model. `remember` refuses unless my latest message asks to save something ("rmbr", "remember that", "save this", "don't forget"), and "I can't remember the formula" does not count. `forget` never deletes right away: it holds the facts, the model asks "are you sure you want me to forget...", and code deletes them only if my next message is a yes.
+
+**Web app.** `server.py` wraps the same agent loop in a FastAPI server. The model runs in a background thread and streams each piece of text to the page as a line of JSON, along with tool events. A lock makes requests wait their turn, since one model can only write one answer at a time. `static/index.html` is a single file with no outside libraries, so it works offline.
 
 **File attachments.** `files.py` reads plain text and extracts text from PDFs with `pypdf`. The text is added to the message, so to the model an attachment is just more text. Files over 30,000 characters are cut off with a note.
 
@@ -117,7 +133,8 @@ Settings: 4 layers, 4 heads, 128-dim embeddings, 64-character context, 5,000 ste
 - Style instructions are followed only loosely. The model still adds emojis and sign-offs in plain style, and in roast style it tends to copy its example jokes rather than write new ones.
 - Search depends on an unofficial package, needs internet, and only sees short snippets. A small model can still misread them.
 - An 8B to 30B local model is well below frontier models, especially on long multi-step tasks.
-- Memories are saved to `memory.json` on your machine, which is git-ignored so personal facts never reach GitHub. Ornate sometimes misses a fact mentioned in passing alongside a question, so saying "remember" is the reliable way. When Ornate deletes a memory on its own, it asks you to confirm first, because in testing it once picked the wrong fact.
+- Memories are saved to `memory.json` on your machine, which is git-ignored so personal facts never reach GitHub. Ornate saves only when you ask, so facts mentioned in passing are not kept.
+- The web app keeps one conversation at a time and does not save chats yet. Math written in LaTeX shows as raw text.
 - Nothing is fine-tuned yet. The models are stock Qwen3 weights from [mlx-community](https://huggingface.co/mlx-community).
 
 ## Notes
