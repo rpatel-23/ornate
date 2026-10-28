@@ -43,3 +43,25 @@ for text, want in CLAIMS.items():
         cfails += 1
         print(f"FAIL wanted {want}, got {got}: {text}")
 print(f"{len(CLAIMS) - cfails}/{len(CLAIMS)} save-claim checks passed")
+
+# is the user's message a request to delete something? (forget refuses otherwise)
+DELETES = {
+    "forget that i take ap stats": True,
+    "i quit soccer, delete that from your memory": True,
+    "can you remove my SAT date": True,
+    "clear my memory": True,
+    # not requests: must never queue a delete
+    "dont forget my sat is on december 5": False,
+    "don't forget i hate long explanations": False,
+    "i forgot my calculator at home lol": False,
+    "what do you know about me?": False,
+    "what do you remember about me?": False,
+    "whats in your memory": False,
+}
+dfails = 0
+for text, want in DELETES.items():
+    got = is_delete_request(text)
+    if got != want:
+        dfails += 1
+        print(f"FAIL wanted {want}, got {got}: {text}")
+print(f"{len(DELETES) - dfails}/{len(DELETES)} delete-request checks passed")

@@ -108,6 +108,9 @@ add_tool({
 pending_delete = []
 
 def forget(args):
+    if not is_delete_request(last_user_text):   # code gate: "what do you know about me?" must never queue a delete
+        pending_delete.clear()
+        return "Nothing was deleted: the user did not ask you to forget anything. Answer their message normally."
     facts = args.get("facts") or []
     if isinstance(facts, str):
         facts = [facts]
@@ -179,6 +182,13 @@ NOT_A_REQUEST = re.compile(r"\b(can'?t|cannot|couldn'?t|don'?t|do not|never)\s+r
 def is_save_request(text):
     return bool(SAVE_REQUEST.search(text)) and not NOT_A_REQUEST.search(text)
 
+# an ask to delete names it: "forget...", "delete...", "remove...". "Don't forget" is a save, and "i forgot" doesn't match.
+DELETE_REQUEST = re.compile(r"\b(forget|delete|remove|erase|clear|wipe)\b", re.I)
+NOT_A_DELETE = re.compile(r"\b(don'?t|do not|never)\s+forget\b", re.I)
+
+def is_delete_request(text):
+    return bool(DELETE_REQUEST.search(text)) and not NOT_A_DELETE.search(text)
+
 last_user_text = ""   # the latest message from the user; remember() checks it
 
 HINT = "\n\n(Note from the app: the user is asking you to save something. Call remember first.)"
@@ -241,7 +251,8 @@ SKILLS_NOTE = (
     + "\nrun_python can only run Python. When the user asks you to write code in another language, just write it in your answer without calling a tool."
     + "\nOnly call remember when the user asks you to remember or save something. Do not save facts on your own, even if the user mentions something about themselves. Use what you know about the user only when it helps the answer."
     + "\nIf the user asks you to remember or save something, in any wording (remember this, rmbr, save this, note that, don't forget, keep in mind), always call remember, even for things you would not save on your own. If they say \"this\" or \"that\", save what it refers to from earlier in the chat, written as a full sentence. The only exception is passwords or private details. Never say you saved, noted, or will remember something unless you called remember in that same reply."
-    + "\nIf the user asks you to forget or delete something you know about them, call forget with the exact text of the matching facts, copied from the memory list. Forget does not delete right away: ask the user to confirm, and their next message decides. If nothing matches, say so and do not call forget. \"Don't forget\" means remember, not forget."
+    # no forget rule here: its wording ("something you know about them") made "what do you know about me?" call forget.
+    # The forget tool's description and its replies cover how to delete and confirm.
 )
 
 # the full system prompt used by the chat and by eval_routing.py

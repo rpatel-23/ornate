@@ -195,7 +195,51 @@ After that, memory changes are decided only by the user's message:
 - `forget` holds the facts and the model asks "are you sure?". Code deletes them only if the next message is a yes. This replaced the y/n prompt, which had stopped working in the web app because it waited for input in the server's terminal.
 - `test_checks.py` runs these checks without the model: 11 messages for "is this a save request" and 6 answers for "does this claim a save", including the photosynthesis sentence.
 
-The routing and memory evals have not been rerun since these changes.
+### Rerun after "save only when asked"
+
+Both evals were rerun on the 30B-A3B with thinking off after these changes.
+
+| Eval | Before | After |
+|---|---|---|
+| Routing, model alone | 27/30 | 30/30 in 99s |
+| Routing, with fake-save check | 28/30 | 30/30 |
+| Memory | 9/10 | 8/10 in 31s |
+
+Routing: the code check caught nothing, because the model got everything right on its own. Part of the gain comes from the key, not the model: "btw im taking AP Gov" and "im a junior..." now expect no tool, and the model never saved those anyway. "Quickly explain standard deviation" went back to answering directly.
+
+The routing eval checks only the model's first move and does not run tools. So a `remember` call on a message that is not a save request would still count as a fail here, even though the code would refuse it.
+
+Memory: the basketball miss is unchanged (it still sends "Plays soccer."). The new miss is worse. "What do you know about me?" called `forget` with all five saved facts. In the app, that only queues the facts, and nothing is deleted unless the next message is a yes. But the model would ask "are you sure you want me to forget everything?" in reply to a harmless question. The forget instructions in the prompt changed between runs (confirm in chat instead of y/n), which is likely what moved it, the same way adding a tool moved the standard deviation message.
+
+### Fixing "what do you know about me?"
+
+It was not one message. Three more ways of asking were tried against several versions of the prompt. Each version below changes one thing from the current prompt. Each cell counts how many of the 4 questions called `forget` on every saved fact:
+
+| Prompt | Calls forget |
+|---|---|
+| Current prompt | 4 of 4 |
+| Forget rule from before the web app | 2 of 4 |
+| Current prompt, earlier date | 3 of 4 |
+| Memory list titled "Saved facts" instead of "What you know about the user" | 1 of 4 |
+| Forget rule removed | 0 of 4 |
+
+So the earlier 9/10 was partly luck: the old prompt also failed "what do you remember about me?", which the test did not include. Even the date at the top of the prompt changes the result, so rewording the prompt cannot be relied on. The forget rule ("If the user asks you to forget or delete something you know about them...") reads a lot like the question.
+
+Two fixes:
+
+1. **Code check.** `forget` now refuses unless the user's message says forget, delete, remove, erase, clear, or wipe, not counting "don't forget". It queues nothing and tells the model to answer normally. `test_checks.py` covers it with 10 messages.
+2. **Prompt.** The forget rule was removed. The tool's own description and its replies already explain how to delete and confirm.
+
+The three new questions were added to `memory_tests.json`. They were found while debugging this bug, so they are not a held-out test.
+
+| Eval | Model alone | With code check |
+|---|---|---|
+| Memory (13 messages) | 12/13 | 12/13 |
+| Routing (30 messages) | 30/30 | 30/30 |
+
+Removing the rule changed no routing answers. With the rule gone, the model no longer calls `forget` on these questions, so the code check catches nothing in this run. It is there for the next time a prompt change shifts the model.
+
+The basketball miss remains: "forget that i play basketball" is a real request to delete, so the check lets it through, and only the "are you sure?" step stops "Plays soccer." from being deleted.
 
 ## 7. A bigger model: 32B dense vs 30B MoE
 

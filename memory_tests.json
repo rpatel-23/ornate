@@ -10,6 +10,9 @@
     {"message": "dont forget my sat is on december 5", "expect": ["none", "remember"]},
     {"message": "i forgot my calculator at home lol, what's a trick for 15% tips", "expect": "none"},
     {"message": "what do you know about me?", "expect": "none"},
-    {"message": "remind me, when is my SAT?", "expect": "none"}
+    {"message": "remind me, when is my SAT?", "expect": "none"},
+    {"message": "what do you remember about me?", "expect": "none"},
+    {"message": "tell me everything you know about me", "expect": "none"},
+    {"message": "whats in your memory", "expect": "none"}
   ]
 }
