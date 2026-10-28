@@ -92,7 +92,7 @@
   },
   {
     "message": "btw im taking AP Gov this year",
-    "expect": "remember"
+    "expect": "none"
   },
   {
     "message": "for future reference i like answers in bullet points",
@@ -100,7 +100,7 @@
   },
   {
     "message": "im a junior and want to major in CS. what classes should i take senior year?",
-    "expect": "remember"
+    "expect": "none"
   },
   {
     "message": "i have a stats test tomorrow, can you quickly explain standard deviation",

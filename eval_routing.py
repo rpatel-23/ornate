@@ -2,7 +2,7 @@ import json
 import os
 import re
 import time
-from assistant import SYSTEM_PROMPT, add_memory_hint, check_fake_save
+from assistant import SYSTEM_PROMPT, add_memory_hint, check_missed_save
 from harness import ask_model, MODEL, THINK, find_tool_call
 
 # what each expected label means as a first action
@@ -35,7 +35,7 @@ for t in tests:
     got = first_action(reply)
     raw = got   # what the model did on its own, before any code check
     # same one-time check the chat uses: if it claimed a save without calling remember, it gets one retry
-    note = check_fake_save(reply, messages) if got == "none" else None
+    note = check_missed_save(reply, messages) if got == "none" else None
     if note:
         messages += [{"role": "assistant", "content": reply}, {"role": "user", "content": note}]
         reply = ask_model(messages, use_tools=True, show=False)

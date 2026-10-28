@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ornate</title>
+<style>
+  :root { --bg:#faf9f6; --panel:#fff; --text:#1d1d1b; --muted:#6b6a65; --line:#e6e3dc; --me:#1d1d1b; --me-text:#fff; --accent:#2f6fed; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#161615; --panel:#1f1f1d; --text:#ecebe6; --muted:#9a988f; --line:#2f2e2b; --me:#ecebe6; --me-text:#161615; --accent:#5b8cff; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 -apple-system, system-ui, sans-serif; height:100vh; display:flex; flex-direction:column; }
+  header { display:flex; align-items:center; gap:12px; padding:12px 20px; border-bottom:1px solid var(--line); }
+  header h1 { font-size:18px; margin:0; flex:1; letter-spacing:.02em; }
+  header h1 span { color:var(--accent); }
+  button { font:inherit; font-size:14px; border:1px solid var(--line); background:var(--panel); color:var(--text); border-radius:8px; padding:6px 12px; cursor:pointer; }
+  button:hover { border-color:var(--muted); }
+  #chat { flex:1; overflow-y:auto; padding:24px 20px; }
+  .wrap { max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:14px; }
+  .msg { padding:10px 14px; border-radius:14px; max-width:85%; white-space:pre-wrap; word-wrap:break-word; }
+  .me { align-self:flex-end; background:var(--me); color:var(--me-text); }
+  .bot { align-self:flex-start; background:var(--panel); border:1px solid var(--line); }
+  .bot pre { background:var(--bg); border:1px solid var(--line); padding:10px; border-radius:8px; overflow-x:auto; white-space:pre; }
+  .bot code { font:13px ui-monospace, Menlo, monospace; }
+  .note { align-self:center; color:var(--muted); font-size:13px; }
+  .actions { align-self:flex-start; margin-top:-8px; }
+  .actions button { border:none; background:none; color:var(--muted); font-size:13px; padding:2px 6px; border-radius:6px; }
+  .actions button:hover { color:var(--text); background:var(--panel); }
+  .welcome { align-self:center; text-align:center; margin:12vh 0 8px; }
+  .welcome h2 { font-size:28px; margin:0 0 6px; font-weight:600; }
+  .welcome p { margin:0; color:var(--muted); }
+  .typing { color:var(--muted); font-style:italic; }
+  .overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; padding:16px; z-index:10; }
+  .overlay.open { display:flex; }
+  .modal { background:var(--panel); border:1px solid var(--line); border-radius:16px; width:100%; max-width:440px; max-height:70vh; display:flex; flex-direction:column; box-shadow:0 20px 50px rgba(0,0,0,.25); }
+  .modal-head { display:flex; align-items:baseline; gap:10px; padding:18px 20px 12px; }
+  .modal-head h3 { margin:0; font-size:17px; font-weight:600; }
+  .modal-head .count { color:var(--muted); font-size:13px; flex:1; }
+  .modal-head button { border:none; background:none; color:var(--muted); font-size:18px; padding:0 4px; }
+  .mem-list { list-style:none; margin:0; padding:0 8px 8px; overflow-y:auto; }
+  .mem-list li { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; font-size:15px; }
+  .mem-list li:hover { background:var(--bg); }
+  .mem-list li span { flex:1; }
+  .mem-list li button { border:none; background:none; color:var(--muted); padding:2px 6px; opacity:0; }
+  .mem-list li:hover button { opacity:1; }
+  .mem-list li button:hover { color:#e5484d; }
+  .mem-empty { color:var(--muted); font-size:14px; padding:4px 20px 22px; }
+  .modal-foot { border-top:1px solid var(--line); padding:12px 20px; font-size:12px; color:var(--muted); }
+  #queue { max-width:760px; margin:0 auto 8px; display:flex; flex-direction:column; gap:6px; }
+  .qitem { display:flex; align-items:center; gap:8px; font-size:14px; padding:6px 10px; border:1px dashed var(--line); border-radius:10px; color:var(--muted); }
+  .qitem span { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .qitem button { font-size:12px; padding:3px 8px; }
+  form { border-top:1px solid var(--line); padding:14px 20px; }
+  form .wrap { flex-direction:row; gap:10px; }
+  textarea { flex:1; font:inherit; resize:none; border:1px solid var(--line); background:var(--panel); color:var(--text); border-radius:12px; padding:10px 14px; height:46px; max-height:160px; }
+  textarea:focus { outline:none; border-color:var(--muted); }
+  #send { background:var(--accent); color:#fff; border:none; border-radius:12px; padding:0 18px; }
+  #send:disabled { opacity:.5; cursor:default; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Ornate<span>.</span></h1>
+  <button id="memBtn">Memory</button>
+  <button id="newBtn">New chat</button>
+</header>
+<div class="overlay" id="memOverlay">
+  <div class="modal" role="dialog" aria-label="Memory">
+    <div class="modal-head"><h3>Memory</h3><span class="count" id="memCount"></span><button id="memClose" aria-label="Close">✕</button></div>
+    <ul class="mem-list" id="memList"></ul>
+    <div class="modal-foot">Saved only on this Mac. Ornate uses these in every chat.</div>
+  </div>
+</div>
+<div id="chat"><div class="wrap" id="log"><div class="welcome"><h2>Welcome to Ornate</h2><p>Runs locally on this Mac. Ask anything.</p></div></div></div>
+<form id="form">
+  <div id="queue"></div>
+  <div class="wrap">
+    <textarea id="box" placeholder="Message Ornate…" autofocus></textarea>
+    <button id="send" type="submit">Send</button>
+  </div>
+</form>
+<script>
+const log = document.getElementById("log"), box = document.getElementById("box"),
+      send = document.getElementById("send"), chat = document.getElementById("chat");
+
+// turn the model's markdown into safe HTML: escape first, then code blocks, inline code, bold
+function render(text) {
+  let t = text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  // code blocks: also eat the blank lines around them, or pre-wrap shows big gaps
+  t = t.replace(/\n*```\w*\n?([\s\S]*?)\n?```\n*/g, (_, c) => `<pre><code>${c}</code></pre>`);
+  t = t.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+  t = t.replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>");
+  return t;
+}
+
+function add(cls, html) {
+  const d = document.createElement("div");
+  d.className = "msg " + cls;
+  d.innerHTML = html;
+  log.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+  return d;
+}
+
+// what to show while each tool runs
+const TOOL_LABELS = { run_python:"running Python", web_search:"searching the web", load_skill:"loading a skill",
+                      start_quiz:"starting a quiz", remember:"saving to memory", forget:"deleting from memory" };
+
+const MEMORY_TOOLS = ["remember", "forget"];
+
+function addChip(text, before) {
+  const chip = document.createElement("div");
+  chip.className = "note";
+  chip.textContent = text;
+  log.insertBefore(chip, before);
+}
+
+// messages typed while Ornate is busy wait here, and are answered one by one in order
+const queue = [];
+let busy = false;
+const queueDiv = document.getElementById("queue");
+
+function renderQueue() {
+  queueDiv.innerHTML = "";
+  queue.forEach((text, i) => {
+    const row = document.createElement("div");
+    row.className = "qitem";
+    const label = document.createElement("span");
+    label.textContent = "Queued: " + text;
+    row.appendChild(label);
+    if (i > 0) {   // "send next" moves it to the front of the line
+      const next = document.createElement("button");
+      next.textContent = "Send next";
+      next.onclick = () => { queue.unshift(queue.splice(i, 1)[0]); renderQueue(); };
+      row.appendChild(next);
+    }
+    const del = document.createElement("button");
+    del.textContent = "✕";
+    del.onclick = () => { queue.splice(i, 1); renderQueue(); };
+    row.appendChild(del);
+    queueDiv.appendChild(row);
+  });
+}
+
+function sendMessage(e) {
+  e.preventDefault();
+  const text = box.value.trim();
+  if (!text) return;
+  box.value = "";
+  if (busy) { queue.push(text); renderQueue(); }
+  else run(text);
+}
+
+// a small "Copy" button under each finished answer; copies the raw text, markdown included
+function addCopyButton(bubble, text) {
+  const bar = document.createElement("div");
+  bar.className = "actions";
+  const btn = document.createElement("button");
+  btn.textContent = "Copy";
+  btn.onclick = async () => {
+    try { await navigator.clipboard.writeText(text); btn.textContent = "Copied ✓"; }
+    catch { btn.textContent = "Couldn't copy"; }
+    setTimeout(() => btn.textContent = "Copy", 1500);
+  };
+  bar.appendChild(btn);
+  bubble.after(bar);
+}
+
+async function run(text) {
+  busy = true;
+  log.querySelector(".welcome")?.remove();
+  add("me", render(text));
+  const bubble = add("bot typing", "thinking…");
+  let answer = "";
+  try {
+    const r = await fetch("/chat", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ message: text }) });
+    // read the reply piece by piece; each line is one JSON event from the server
+    const reader = r.body.getReader(), decoder = new TextDecoder();
+    let buffer = "";
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop();   // keep any half-received line for next time
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const ev = JSON.parse(line);
+        if (ev.type === "text") {
+          answer += ev.text;
+          bubble.className = "msg bot";
+          bubble.innerHTML = render(answer);
+        } else if (ev.type === "tool_start") {
+          // memory tools get their label only after they finish, so it never says "saving" when nothing was saved
+          if (!MEMORY_TOOLS.includes(ev.name)) addChip("⚙︎ " + (TOOL_LABELS[ev.name] || ev.name) + "…", bubble);
+          answer = "";   // text before a tool call is replaced by the answer after it
+          bubble.className = "msg bot typing"; bubble.textContent = "thinking…";
+        } else if (ev.type === "tool" && MEMORY_TOOLS.includes(ev.name)) {
+          const out = ev.output || "";
+          if (ev.name === "remember" && !out.startsWith("Not saved") && !out.startsWith("Nothing"))
+            addChip(out.includes("Saved.") ? "✓ saved to memory" : "✓ already in memory", bubble);
+          if (ev.name === "forget" && out.startsWith("Deleted")) addChip("✓ deleted from memory", bubble);
+        } else if (ev.type === "error") {
+          answer += "\n(error: " + ev.text + ")";
+          bubble.className = "msg bot"; bubble.innerHTML = render(answer);
+        }
+        chat.scrollTop = chat.scrollHeight;
+      }
+    }
+    if (!answer) { bubble.className = "msg bot"; bubble.textContent = "(no reply)"; }
+    else addCopyButton(bubble, answer);
+  } catch (err) {
+    bubble.className = "msg bot";
+    bubble.textContent = "Couldn't reach the server. Is uvicorn running?";
+  }
+  busy = false; box.focus();
+  if (queue.length) { const next = queue.shift(); renderQueue(); run(next); }
+}
+
+document.getElementById("form").addEventListener("submit", sendMessage);
+// Enter sends, Shift+Enter makes a new line
+box.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) sendMessage(e); });
+
+document.getElementById("newBtn").onclick = async () => {
+  if (busy) return;   // wait for the current answer before clearing
+  queue.length = 0; renderQueue();
+  await fetch("/reset", { method:"POST" });
+  log.innerHTML = '<div class="welcome"><h2>Welcome to Ornate</h2><p>Runs locally on this Mac. Ask anything.</p></div>';
+};
+
+// memory popup: a scrollable list, with a delete button on each fact
+const overlay = document.getElementById("memOverlay"), memList = document.getElementById("memList"),
+      memCount = document.getElementById("memCount");
+
+async function loadMemory() {
+  const facts = (await (await fetch("/memory")).json()).facts;
+  memCount.textContent = facts.length ? facts.length + (facts.length === 1 ? " fact" : " facts") : "";
+  memList.innerHTML = "";
+  if (!facts.length) { memList.innerHTML = '<div class="mem-empty">Nothing saved yet. Tell Ornate to remember something.</div>'; return; }
+  facts.forEach((f, i) => {
+    const li = document.createElement("li");
+    const t = document.createElement("span"); t.textContent = f;
+    const del = document.createElement("button"); del.textContent = "✕"; del.title = "Delete";
+    del.onclick = async () => {
+      if (busy) return;   // don't change memory while an answer is being written
+      await fetch("/memory/" + (i + 1), { method:"DELETE" });
+      loadMemory();
+    };
+    li.append(t, del);
+    memList.appendChild(li);
+  });
+}
+
+document.getElementById("memBtn").onclick = () => { overlay.classList.add("open"); loadMemory(); };
+const closeMem = () => overlay.classList.remove("open");
+document.getElementById("memClose").onclick = closeMem;
+overlay.onclick = e => { if (e.target === overlay) closeMem(); };   // click outside to close
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeMem(); });
+</script>
+</body>
+</html>

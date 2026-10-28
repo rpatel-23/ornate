@@ -68,7 +68,7 @@ def add_tool(spec, func):
     TOOLS.append(spec)
     TOOL_FUNCS[spec["function"]["name"]] = func
     
-def ask_model(messages, use_tools, show, think=None):
+def ask_model(messages, use_tools, show, think=None, emit=None):
     prompt = tokenizer.apply_chat_template(
         messages,
         tools=TOOLS if use_tools else None,
@@ -77,8 +77,15 @@ def ask_model(messages, use_tools, show, think=None):
     )
     reply = ""
     shown = 0
+    sent = 0   # how much visible text has gone to emit
     for chunk in stream_generate(model, tokenizer, prompt=prompt, max_tokens=4000):
         reply += chunk.text
+        if emit:
+            # for the web page: no thinking, and stop before any tool call text
+            clean = re.sub(r"<think>.*?(</think>|$)", "", reply, flags=re.DOTALL).split("<tool_call>")[0].lstrip()
+            if len(clean) > sent:
+                emit({"type": "text", "text": clean[sent:]})
+                sent = len(clean)
         if show:
             # hide everything between <think> and </think>, print only what's new
             visible = re.sub(r"<think>.*?(</think>|$)", "(thinking) ", reply, flags=re.DOTALL)
@@ -106,12 +113,12 @@ def find_tool_call(reply):
         return {"name": bare.group(1), "arguments": json.loads(bare.group(2))}
     return None
 
-def respond(messages, use_tools=True, show=True, check=None):
+def respond(messages, use_tools=True, show=True, check=None, emit=None):
     """Run the agent loop on a conversation and return the final reply."""
     reply = ""
     think = THINK  # new: start with thinking off unless forced on
     for _ in range(5):
-        reply = ask_model(messages, use_tools, show, think)
+        reply = ask_model(messages, use_tools, show, think, emit)
         messages.append({"role": "assistant", "content": reply})
         try:
             data = find_tool_call(reply)
@@ -124,6 +131,8 @@ def respond(messages, use_tools=True, show=True, check=None):
                     continue
                 break
             name = data["name"]
+            if emit:
+                emit({"type": "tool_start", "name": name})
             output = TOOL_FUNCS[name](data["arguments"])
         except Exception as e:
             name, output = "tool error", f"Error: bad tool call ({e})"
@@ -131,9 +140,11 @@ def respond(messages, use_tools=True, show=True, check=None):
             preview = output if name in ("run_python", "web_search") else (output.splitlines() or [""])[0]
             print(f"\n[{name}] {preview}\n")
         messages.append({"role": "tool", "content": output})
+        if emit:
+            emit({"type": "tool", "name": name, "output": output[:300]})   # the page decides what to show from the result   # lets the page show "searching the web..." etc.
         if THINK_MODE == "auto" and name in THINK_AFTER:  # new
             think = True  # new: the hard part starts now, so think from here on
     if messages[-1]["role"] == "tool":
-        reply = ask_model(messages, False, show, think)
+        reply = ask_model(messages, False, show, think, emit)
         messages.append({"role": "assistant", "content": reply})
     return reply

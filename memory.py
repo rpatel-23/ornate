@@ -17,6 +17,9 @@ def save(facts):
 def add(fact):
     facts = load()
     fact = fact.strip()
+    fact = fact[0].upper() + fact[1:]          # "i play soccer" -> "I play soccer."
+    if not fact.endswith((".", "!", "?")):
+        fact += "."
     if fact.lower() in (f.lower() for f in facts):   # skip exact repeats
         return "Already saved."
     facts.append(fact)

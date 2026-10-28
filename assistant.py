@@ -74,16 +74,20 @@ add_tool({
 }, web_search)
 
 def remember(args):
+    if not is_save_request(last_user_text):   # code gate: the model can't save on its own
+        return "Not saved: the user did not ask you to remember anything. Only save when they ask. Now answer their message."
     facts = args.get("facts") or args.get("fact") or []
     if isinstance(facts, str):   # accept a single string too, in case the model sends one
         facts = [facts]
-    return " ".join(memory.add(f) for f in facts if f.strip()) or "Nothing to save."
+    results = " ".join(memory.add(f) for f in facts if f.strip()) or "Nothing to save."
+    # a small model tends to just echo the fact back, so show it what a good reply looks like
+    return results + " Now tell the user in one short sentence, like \"Got it, I'll remember that.\", then answer anything else in their message."
 
 add_tool({
     "type": "function",
     "function": {
         "name": "remember",
-        "description": "Save lasting facts about the user for future chats.",
+        "description": "Save facts about the user for future chats. Only use this when the user asks you to remember or save something.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -98,26 +102,43 @@ add_tool({
     },
 }, remember)
 
+# ---- deleting needs the user to say yes in the chat ----
+# forget() never deletes on its own. It saves the facts here, the model asks "are you sure?",
+# and the code deletes them only if the user's NEXT message is a yes.
+pending_delete = []
+
 def forget(args):
     facts = args.get("facts") or []
     if isinstance(facts, str):
         facts = [facts]
-    # deleting is permanent, so the user confirms in code; the model can't skip this
-    found = [f for f in facts if memory.find_text(f)]
-    missing = [f for f in facts if f not in found]
-    gone = []
+    found = [memory.find_text(f) for f in facts if memory.find_text(f)]
+    missing = [f for f in facts if not memory.find_text(f)]
+    pending_delete[:] = found
     if found:
-        print("\n[forget] delete these memories?\n" + "\n".join(f"  - {memory.find_text(f)}" for f in found))
-        if input("  y/n: ").strip().lower() in ("y", "yes"):
-            gone = [memory.remove_text(f) for f in found]
-        else:
-            return "The user said no, so nothing was deleted. Ask them which memory they meant."
-    out = ("Deleted: " + " | ".join(gone)) if gone else "Nothing was deleted."
+        out = ("Not deleted yet. Ask the user to confirm, in one short line, like: "
+               f"\"Are you sure you want me to forget: {'; '.join(found)}?\" "
+               "Their next message decides. Do not say it was deleted.")
+    else:
+        out = "Nothing was deleted."
     if missing:
         # don't guess: show the real list so the model can copy the exact text and try again
         out += "\nNot found: " + " | ".join(missing) + "\nCurrent memory:" + (memory.as_prompt().split(":", 1)[1] or " (empty)")
-        out += "\nTo delete one of these, call forget again with its exact text."
+        out += "\nIf one of these is what they meant, call forget again with its exact text. If none match, tell the user."
     return out
+
+YES = re.compile(r"^\W*(y|yes|yeah|yea|yep|yup|sure|ok|okay|do it|confirm|go ahead)\b", re.I)
+
+def handle_delete_reply(text):
+    """Called on the user's message right after Ornate asked to confirm a delete.
+    Returns a note for the model saying what the code did."""
+    if not pending_delete:
+        return ""
+    facts = pending_delete[:]
+    pending_delete.clear()
+    if YES.search(text):
+        gone = [memory.remove_text(f) for f in facts]
+        return "\n\n(Note from the app: the user confirmed, so these were deleted: " + " | ".join(gone) + ". Tell the user in one short sentence, like \"Done, I've forgotten that.\")"
+    return "\n\n(Note from the app: the user did not confirm, so nothing was deleted. If they said no, tell them in one short sentence, like \"Okay, I'll keep it.\" Otherwise just answer their message.)"
 
 add_tool({
     "type": "function",
@@ -146,30 +167,63 @@ def unload_skills(messages):
         if m["role"] == "assistant" and re.search(r'"name":\s*"load_skill"', m["content"]) and nxt["role"] == "tool":
             nxt["content"] = "(skill instructions were used for that answer and are no longer loaded)"
 
-# words that usually mean "save this"; code spots them so the model can't miss them,
-# but the model still decides, since "I can't remember the formula" isn't a save request
-SAVE_CUES = re.compile(r"\b(remember|rmbr|rmb|save (this|that|it)|note (this|that)|don'?t forget|keep in mind|memorize)\b", re.I)
+# ---- memory saves happen only when the user asks ----
+
+# an explicit ask to save: "rmbr...", "remember that...", "save this", "don't forget", "for future reference"...
+SAVE_REQUEST = re.compile(
+    r"\b(rmbr|rmb|remember (that|this|it|i|my|me)|save (this|that|it)|(add|put) (this|that|it) (to|in) (your )?memory"
+    r"|note (this|that)|don'?t forget|keep in mind|memorize|for future reference)\b", re.I)
+# "I can't remember the formula" is a question, not a save request
+NOT_A_REQUEST = re.compile(r"\b(can'?t|cannot|couldn'?t|don'?t|do not|never)\s+remember\b", re.I)
+
+def is_save_request(text):
+    return bool(SAVE_REQUEST.search(text)) and not NOT_A_REQUEST.search(text)
+
+last_user_text = ""   # the latest message from the user; remember() checks it
+
+HINT = "\n\n(Note from the app: the user is asking you to save something. Call remember first.)"
+
+def clear_memory_hints(messages):
+    """After an answer, take the save hint back out of the chat history,
+    so an old hint can't push the model to call remember again on later messages."""
+    for m in messages:
+        if m["role"] == "user" and m["content"].endswith(HINT):
+            m["content"] = m["content"][: -len(HINT)]
 
 def add_memory_hint(text):
-    if SAVE_CUES.search(text):
-        return text + "\n\n(Note from the app: this message may be asking you to save something. If it is, call remember first.)"
-    return text
+    """Called on every user message: records it, and flags it if it asks to save something."""
+    global last_user_text
+    last_user_text = text
+    text = text + handle_delete_reply(text)   # a yes/no to a pending delete is settled in code first
+    return text + HINT if is_save_request(last_user_text) else text
 
-# replies that claim a memory was saved
-CLAIMS_SAVE = re.compile(r"\b(remembered|saved|noted|got it,? i'?ll remember|i'?ll remember|stored)\b", re.I)
+# replies that claim a save ("Remembered.", "I've saved that..."). Used only to catch a false claim, never to save.
+CLAIMS_SAVE = re.compile(
+    r"\b(i'?ve|i have|i)\s+(saved|noted|remembered)\b|\bi'?ll remember\b|\b(saved|noted) (that|this|it)\b"
+    r"|\badded( it| that| this)? (to|in) (my |your )?memory\b|^\W*(remembered|saved|noted)\W*$",
+    re.I | re.M)
 
-def check_fake_save(reply, messages):
-    """Catch the model saying it saved something when it never called remember in this turn."""
-    answer = reply.split("</think>")[-1]
-    if not CLAIMS_SAVE.search(answer):
-        return None
-    # look back to the user's last real message for a remember call
+def called_remember(messages):
+    """Did the model call remember since the user's last message?"""
     for m in reversed(messages):
         if m["role"] == "user":
-            break
+            return False
         if m["role"] == "assistant" and re.search(r'"name":\s*"remember"|^\s*remember\s*\{', m["content"], re.M):
-            return None
-    return "(Note from the app: you said you saved something, but you did not call remember, so nothing was saved. Call remember now with the fact.)"
+            return True
+    return False
+
+def check_missed_save(reply, messages):
+    """Runs after the model's final answer. Two cases, both decided by the user's message:
+    - the user asked to save, but remember was never called: ask the model to call it
+    - the user did NOT ask, but the answer claims something was saved: make it answer again without the false claim
+    Nothing is ever saved because of the model's own words; remember() still checks the user's message."""
+    asked = is_save_request(last_user_text)
+    if asked and not called_remember(messages):
+        return "(Note from the app: the user asked you to save something, but you did not call remember, so nothing was saved. Call remember now.)"
+    answer = reply.split("</think>")[-1]
+    if not asked and not called_remember(messages) and CLAIMS_SAVE.search(answer):
+        return "(Note from the app: nothing was saved, because the user did not ask you to remember anything. Reply to their last message normally, and do not say you saved or remembered anything.)"
+    return None
 
 # the menu: one line per skill, taken from the "Use this when..." line of each file
 menu = "\n".join(
@@ -184,9 +238,10 @@ SKILLS_NOTE = (
     + "\nWhen the user asks to be quizzed, call start_quiz. It runs the whole quiz with the user and returns the results, so never write quiz questions yourself."
     + "\nA skill applies only to the message that matched it. If a later message does not match a skill, ignore any skill instructions loaded earlier and answer normally."
     + "\nUse web_search for anything recent or any fact you are not sure of. When you read results: compare them against today's date and prefer the newest information, read every result before answering, and if results disagree or none answers the question directly, say so. Name the source you used. Do not search for things you know well, like basic math or definitions."
-    + "\nWhen the user tells you a lasting fact about themselves (their classes, goals, or how they like answers), call remember with each fact as its own short sentence, then keep answering. Facts mentioned in passing count too, like \"I'm on the soccer team\" or \"I'm in 11th grade\": save them first, even when the message also asks a question. Do not save one-time things like a single homework answer, and never save passwords or private details. Use what you know about the user only when it helps the answer."
+    + "\nrun_python can only run Python. When the user asks you to write code in another language, just write it in your answer without calling a tool."
+    + "\nOnly call remember when the user asks you to remember or save something. Do not save facts on your own, even if the user mentions something about themselves. Use what you know about the user only when it helps the answer."
     + "\nIf the user asks you to remember or save something, in any wording (remember this, rmbr, save this, note that, don't forget, keep in mind), always call remember, even for things you would not save on your own. If they say \"this\" or \"that\", save what it refers to from earlier in the chat, written as a full sentence. The only exception is passwords or private details. Never say you saved, noted, or will remember something unless you called remember in that same reply."
-    + "\nIf the user asks you to forget or delete something you know about them, call forget with the exact text of the matching facts, copied from the memory list, then tell them exactly what you deleted. If nothing matches, say so and do not call forget. \"Don't forget\" means remember, not forget."
+    + "\nIf the user asks you to forget or delete something you know about them, call forget with the exact text of the matching facts, copied from the memory list. Forget does not delete right away: ask the user to confirm, and their next message decides. If nothing matches, say so and do not call forget. \"Don't forget\" means remember, not forget."
 )
 
 # the full system prompt used by the chat and by eval_routing.py
