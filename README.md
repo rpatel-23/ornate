@@ -16,8 +16,8 @@ Ornate can run Python to check its math, search the web, read PDFs, remember thi
 | **Tools** | Python execution, web search, PDF and text files, memory |
 | **Skills** | Instruction files the model loads on its own when a request matches (mistake analysis, quizzes) |
 | **Adaptive thinking** | Off for quick decisions, on after a skill or search, when the hard reasoning starts |
-| **Memory** | Saves only when asked; deletes only after a "yes" in the chat |
-| **Web app** | Streaming answers, tool status, message queue, memory panel, copy buttons |
+| **Memory** | Saves and deletes only when asked, and deletes only after a "yes" in the chat |
+| **Web app** | Streaming answers, tool status, message queue, memory panel, copy buttons, message editing |
 | **Evals** | Math, routing, skills, memory, and model comparisons, with saved transcripts |
 
 ## Quick start
@@ -65,6 +65,7 @@ Full numbers and transcripts are in [EVALS.md](EVALS.md).
 - **A bigger model was slower and no better.** A dense 32B model ran about 8 times slower than the 30B mixture-of-experts model Ornate uses, scored the same or lower, and made worse deletions.
 - **Anything that matters should be decided by code, not the model.** The model mis-scored quizzes, said "remembered." without saving, and deleted the wrong fact when asked to forget something it didn't have. Quiz scoring, saving, and deleting are now handled in Python.
 - **A safety check caused the bug it was built to stop.** To catch fake saves, I scanned answers for words like "stored". Then a photosynthesis explanation ("energy is stored in glucose") came back as "Already saved." The check now looks only at what the user typed, and `test_checks.py` covers ordinary sentences that must never trigger it.
+- **One line of the prompt made "what do you know about me?" try to delete everything.** The forget instructions read so much like the question that the model called `forget` on every saved fact, and three other ways of asking did the same. Even the date at the top of the prompt changed which ones failed, so rewording was not a fix. Now `forget` refuses unless the user's message asks to delete, and with the line removed the model stopped trying.
 
 ## How it works
 
@@ -93,7 +94,7 @@ your message ──► system prompt (date, tools, skills, memory) ──► mod
 ```
 python test_checks.py    # code-side checks for memory, no model needed (under a second)
 python eval_routing.py   # does it pick the right first move? (30 messages)
-python eval_memory.py    # forget requests against a fake memory list
+python eval_memory.py    # forget requests and memory questions against a fake memory list (13 messages)
 python eval_hard.py      # 50 math problems, with and without the Python tool
 python eval_skill.py     # 9 missed questions, graded by reading the output
 ```

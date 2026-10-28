@@ -27,6 +27,11 @@
   .actions { align-self:flex-start; margin-top:-8px; }
   .actions button { border:none; background:none; color:var(--muted); font-size:13px; padding:2px 6px; border-radius:6px; }
   .actions button:hover { color:var(--text); background:var(--panel); }
+  .actions.mine { align-self:flex-end; }
+  .msg.me.editing { width:85%; background:var(--panel); color:var(--text); border:1px solid var(--line); display:flex; flex-direction:column; gap:8px; }
+  .editing textarea { height:auto; min-height:70px; width:100%; }
+  .edit-buttons { display:flex; justify-content:flex-end; gap:8px; }
+  .edit-buttons .save { background:var(--accent); color:#fff; border:none; }
   .welcome { align-self:center; text-align:center; margin:12vh 0 8px; }
   .welcome h2 { font-size:28px; margin:0 0 6px; font-weight:600; }
   .welcome p { margin:0; color:var(--muted); }
@@ -167,14 +172,60 @@ function addCopyButton(bubble, text) {
   bubble.after(bar);
 }
 
-async function run(text) {
+// an "Edit" button under each of your messages. Sending an edit removes that message and
+// everything after it (here and on the server), then sends the new text in its place.
+function addEditButton(bubble, text) {
+  const bar = document.createElement("div");
+  bar.className = "actions mine";
+  const btn = document.createElement("button");
+  btn.textContent = "Edit";
+  btn.onclick = () => { if (!busy) startEdit(bubble, bar, text); };
+  bar.appendChild(btn);
+  bubble.after(bar);
+}
+
+function startEdit(bubble, bar, text) {
+  bar.style.display = "none";
+  bubble.className = "msg me editing";
+  bubble.innerHTML = "";
+  const area = document.createElement("textarea");
+  area.value = text;
+  const buttons = document.createElement("div");
+  buttons.className = "edit-buttons";
+  const cancel = document.createElement("button"); cancel.type = "button"; cancel.textContent = "Cancel";
+  const save = document.createElement("button"); save.type = "button"; save.className = "save"; save.textContent = "Send";
+  buttons.append(cancel, save);
+  bubble.append(area, buttons);
+  area.focus(); area.setSelectionRange(text.length, text.length);
+
+  const stop = () => { bubble.className = "msg me"; bubble.innerHTML = render(text); bar.style.display = ""; };
+  const submit = () => {
+    const newText = area.value.trim();
+    if (!newText || busy) return;
+    // which of your messages this is (0 = first); the server uses it to know where to cut
+    const turn = [...log.querySelectorAll(".msg.me")].indexOf(bubble);
+    // remove this message and everything after it on the page
+    while (bubble.nextSibling) bubble.nextSibling.remove();
+    bubble.remove();
+    run(newText, turn);
+  };
+  cancel.onclick = stop;
+  save.onclick = submit;
+  // Enter sends, Shift+Enter makes a new line, Escape cancels
+  area.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); }
+    if (e.key === "Escape") stop();
+  });
+}
+
+async function run(text, edit = null) {
   busy = true;
   log.querySelector(".welcome")?.remove();
-  add("me", render(text));
+  addEditButton(add("me", render(text)), text);
   const bubble = add("bot typing", "thinking…");
   let answer = "";
   try {
-    const r = await fetch("/chat", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ message: text }) });
+    const r = await fetch("/chat", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ message: text, edit }) });
     // read the reply piece by piece; each line is one JSON event from the server
     const reader = r.body.getReader(), decoder = new TextDecoder();
     let buffer = "";

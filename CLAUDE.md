@@ -28,7 +28,7 @@ python eval_hard.py / eval_skill.py # math and missed-question evals
 - `harness.py`: model loading, `ask_model` (streaming, optional `emit` for the web), `respond` (agent loop, up to 5 tool rounds, optional `check` retry), `find_tool_call` (also accepts a bare `name {json}` call), `add_tool` registry, `run_python`.
 - `assistant.py`: tools (`load_skill`, `start_quiz`, `web_search`, `remember`, `forget`), skill menu, system prompt, memory rules (`is_save_request`, `is_delete_request`, `add_memory_hint`, `clear_memory_hints`, `check_missed_save`, `handle_delete_reply`).
 - `memory.py`: facts in `memory.json` (git-ignored, personal, never commit it).
-- `agent.py`: terminal chat and slash commands. `server.py` + `static/index.html`: FastAPI web app (NDJSON streaming, lock, queue, memory popup, copy). `quiz.py`, `files.py`, `skills/`, `styles/`.
+- `agent.py`: terminal chat and slash commands. `server.py` + `static/index.html`: FastAPI web app (NDJSON streaming, lock, queue, memory popup, copy, edit a sent message). `quiz.py`, `files.py`, `skills/`, `styles/`.
 - `tokenizer.py`, `data.py`, `bigram.py`, `gpt.py`: the tiny GPT from the start of the project.
 - `EVALS.md`: every eval with numbers and findings. `results/`: saved transcripts.
 
