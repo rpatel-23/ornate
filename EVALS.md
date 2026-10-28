@@ -239,6 +239,11 @@ The three new questions were added to `memory_tests.json`. They were found while
 
 Removing the rule changed no routing answers. With the rule gone, the model no longer calls `forget` on these questions, so the code check catches nothing in this run. It is there for the next time a prompt change shifts the model.
 
+Two more bugs turned up while testing this in the web app, both in code checks:
+
+- **"orget that i take ap stats"** (a typo). The check correctly refused the delete, but the reply left AP Stats out of the list, as if it had been deleted. The refusal now tells the model not to act as if anything was deleted, and to say so if the user seems to want a delete.
+- **"what do u rmbr about me"** with an empty memory replied "Got it, I'll remember that." and saved the question itself as a fact. The save check matched "rmbr" anywhere in the message. Questions like "do you / do u / did you remember" no longer count as save requests, and `test_checks.py` has 4 new cases. No eval message changed: the only one the new rule matches, "what do you remember about me?", already did not count.
+
 The basketball miss remains: "forget that i play basketball" is a real request to delete, so the check lets it through, and only the "are you sure?" step stops "Plays soccer." from being deleted.
 
 ## 7. A bigger model: 32B dense vs 30B MoE

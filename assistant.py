@@ -110,7 +110,9 @@ pending_delete = []
 def forget(args):
     if not is_delete_request(last_user_text):   # code gate: "what do you know about me?" must never queue a delete
         pending_delete.clear()
-        return "Nothing was deleted: the user did not ask you to forget anything. Answer their message normally."
+        return ("Nothing was deleted: the user's message does not ask to forget or delete anything. "
+                "Do not act as if anything was deleted. If they seem to want something deleted, tell them nothing was deleted "
+                "and ask them to say \"forget\" and what to remove. Otherwise answer their message normally.")
     facts = args.get("facts") or []
     if isinstance(facts, str):
         facts = [facts]
@@ -176,8 +178,11 @@ def unload_skills(messages):
 SAVE_REQUEST = re.compile(
     r"\b(rmbr|rmb|remember (that|this|it|i|my|me)|save (this|that|it)|(add|put) (this|that|it) (to|in) (your )?memory"
     r"|note (this|that)|don'?t forget|keep in mind|memorize|for future reference)\b", re.I)
-# "I can't remember the formula" is a question, not a save request
-NOT_A_REQUEST = re.compile(r"\b(can'?t|cannot|couldn'?t|don'?t|do not|never)\s+remember\b", re.I)
+# "I can't remember the formula" is a question, not a save request.
+# So is "what do u rmbr about me?" or "do you remember my SAT date?": asking what's saved is not asking to save.
+NOT_A_REQUEST = re.compile(
+    r"\b(can'?t|cannot|couldn'?t|don'?t|do not|never)\s+remember\b"
+    r"|\b(do|did|does)\s+(you|u)\s+(rmbr|rmb|remember)\b", re.I)
 
 def is_save_request(text):
     return bool(SAVE_REQUEST.search(text)) and not NOT_A_REQUEST.search(text)

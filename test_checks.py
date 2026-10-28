@@ -18,6 +18,10 @@ CASES = {
     "i cant remember the quadratic formula": False,
     "i don't remember how to do this": False,
     "who won the most recent super bowl": False,
+    "what do u rmbr about me": False,
+    "do you remember my sat date?": False,
+    "what did you remember from last time": False,
+    "can you remember that i like bullet points": True,
 }
 fails = 0
 for text, want in CASES.items():
