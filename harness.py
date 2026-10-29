@@ -13,9 +13,9 @@ import mlx.core as mx
 # Both scored about the same time on the math eval (EVALS.md section 2); the 8B's win is memory, not speed.
 MODELS = {
     "baroque":  {"name": "Baroque",  "repo": "mlx-community/Qwen3-30B-A3B-4bit",
-                 "about": "Qwen3 30B-A3B. The smartest. Uses about 17 GB of memory."},
+                 "about": "30B · smartest"},
     "filigree": {"name": "Filigree", "repo": "mlx-community/Qwen3-8B-4bit",
-                 "about": "Qwen3 8B. Lighter: about 5 GB of memory."},
+                 "about": "8B · lighter on memory"},
 }
 
 # ORNATE_THINK=1: always think. ORNATE_THINK=0: never think.
@@ -82,11 +82,18 @@ def print_last_value(code):
     return rest + f"\n_last = {last}\nif _last is not None:\n    print(_last)"
 
 def run_python(code):
+    # PYTHON_COLORS / NO_COLOR: plain error text. Python 3.14 can add terminal color codes like [35m, which are junk to the model.
+    env = {**os.environ, "PYTHON_COLORS": "0", "NO_COLOR": "1"}
     try:
         result = subprocess.run(
-            [sys.executable, "-c", print_last_value(code)], capture_output=True, text=True, timeout=10
+            [sys.executable, "-c", print_last_value(code)], capture_output=True, text=True, timeout=10, env=env
         )
-        return (result.stdout + result.stderr).strip() or "(no output. Use print() to show the result.)"
+        output = (result.stdout + result.stderr).strip() or "(no output. Use print() to show the result.)"
+        if result.returncode != 0:
+            # the code crashed (decided by Python's exit code, not the model's words). Without this note the model
+            # sometimes says "Let's calculate..." and stops (seen on 2x^2+3x+2=0, where math.sqrt hit a negative).
+            output += "\n(The code raised an error. Fix the code and call run_python again.)"
+        return output
     except subprocess.TimeoutExpired:
         return "Error: code took longer than 10 seconds"
 

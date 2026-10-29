@@ -66,7 +66,7 @@ while True:
         print("(switched to plain style)")
 
     messages[0]["content"] = system_prompt(style)   # refresh, so memories saved or deleted last turn are current
-    messages.append({"role": "user", "content": add_memory_hint(user) + attached})
+    messages.append({"role": "user", "content": add_memory_hint(user, attached)})
     attached = ""
     print("\nornate: ", end="")
     respond(messages, check=check_missed_save)

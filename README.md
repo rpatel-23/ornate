@@ -12,7 +12,7 @@ No cloud model, no API key: a 30B open model, an agent loop written from scratch
 
 [Features](#features) · [Quick start](#quick-start) · [Results](#results-at-a-glance) · [What I found](#what-i-found) · [How it works](#how-it-works) · [Full evals](EVALS.md)
 
-<img src="demo-web.png" alt="Ornate in the browser: it loads its missed-question skill, runs Python, and names the exact slip behind a wrong answer of $26" width="860">
+<img src="demo-web.png" alt="Ornate in the browser: a quadratic equation solved step by step with the math drawn by KaTeX, and the sidebar with a pinned chat and a folder" width="860">
 
 <sub>I put $26 on a discount-and-tax problem. Ornate loads its missed-question skill on its own, checks the math in Python, and finds the slip: both percentages taken off the original price, $40 − $10 − $4 = $26.</sub>
 
@@ -44,7 +44,7 @@ All on the 30B-A3B model unless noted. Each set is small, so a gap of one or two
 | **Skills** | Instruction files the model loads on its own when a request matches (mistake analysis, quizzes) |
 | **Adaptive thinking** | Off for quick decisions, on after a skill or search, when the hard reasoning starts |
 | **Memory** | Saves and deletes only when asked, and deletes only after a "yes" in the chat |
-| **Web app** | Streaming answers, tool status, message queue, memory panel, copy buttons, message editing, saved chats with folders and pins, model picker (Baroque = 30B, Filigree = 8B) |
+| **Web app** | Streaming answers, tool status, message queue, memory panel, copy buttons, message editing, saved chats with folders and pins, model picker (Baroque = 30B, Filigree = 8B), LaTeX math, drag-and-drop text files and PDFs |
 | **Evals** | Math, routing, skills, memory, and model comparisons, with saved transcripts |
 
 ## Quick start
@@ -118,7 +118,7 @@ flowchart LR
 - **Skills** (`skills/`). Markdown files listed in the prompt with one line each. The model loads the full file when a request matches, and the harness removes it after the answer so it doesn't leak into later messages.
 - **Quizzes** (`quiz.py`). The model writes the questions as JSON once; Python runs the quiz and keeps score.
 - **Memory** (`memory.py`). Facts are stored in `memory.json` and added to every prompt. Code checks the user's message before any save, and deletes only after a "yes".
-- **Web app** (`server.py`, `static/index.html`). A FastAPI server streams each piece of the answer to the page as JSON, with tool events. A lock queues requests, since one model writes one answer at a time. Chats are saved as JSON files on the Mac (`chats.py`), and a sidebar lists them with pins and folders. The page is one file with no outside libraries.
+- **Web app** (`server.py`, `static/index.html`). A FastAPI server streams each piece of the answer to the page as JSON, with tool events. A lock queues requests, since one model writes one answer at a time. Chats are saved as JSON files on the Mac (`chats.py`), and a sidebar lists them with pins and folders. The page is one file. Its only outside library is KaTeX, which draws math and loads from a CDN; offline, math shows as plain text.
 - **Tiny GPT** (`gpt.py`). Before using a real model, I wrote a character-level transformer and trained it on Shakespeare to understand what is inside one: 816,705 parameters, validation loss 1.62 against 4.17 for random guessing.
 
 ## Tests
@@ -139,7 +139,7 @@ Results are saved to `results/` with full transcripts.
 - The test sets are small (9 to 50 items), and I wrote both the tests and the prompts. Gaps of one or two are noise.
 - `run_python` runs model-written code on the machine without a sandbox.
 - Web search uses an unofficial package and only sees short snippets.
-- Math written in LaTeX shows as raw text in the web app.
+- The web app reads text files and PDFs, not images or Word files.
 - Nothing is fine-tuned. The models are stock Qwen3 weights from [mlx-community](https://huggingface.co/mlx-community).
 - Memories stay in `memory.json` on your machine, which is git-ignored.
 
@@ -150,7 +150,7 @@ Results are saved to `results/` with full transcripts.
 - [x] Memory
 - [x] Web app with streaming
 - [x] Saved chats with folders and pins
-- [ ] Web app design pass
+- [x] Web app design pass: blue accent, LaTeX math, drag-and-drop files
 - [ ] Reading photos of worksheets (vision)
 - [ ] Search over class notes (RAG)
 - [ ] Running code in more languages, in a sandbox

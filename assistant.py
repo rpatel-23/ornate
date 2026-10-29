@@ -205,11 +205,13 @@ def clear_memory_hints(messages):
         if m["role"] == "user" and m["content"].endswith(HINT):
             m["content"] = m["content"][: -len(HINT)]
 
-def add_memory_hint(text):
-    """Called on every user message: records it, and flags it if it asks to save something."""
+def add_memory_hint(text, attached=""):
+    """Called on every user message: records it, and flags it if it asks to save something.
+    attached = text of any files sent with it. It goes before the hint, because clear_memory_hints
+    only finds the hint at the very end; and only the typed words count as a save request."""
     global last_user_text
     last_user_text = text
-    text = text + handle_delete_reply(text)   # a yes/no to a pending delete is settled in code first
+    text = text + handle_delete_reply(text) + attached   # a yes/no to a pending delete is settled in code first
     return text + HINT if is_save_request(last_user_text) else text
 
 # replies that claim a save ("Remembered.", "I've saved that..."). Used only to catch a false claim, never to save.

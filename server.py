@@ -1,6 +1,7 @@
 """Ornate as a web server: the same agent as agent.py, reached over HTTP instead of the terminal.
 Run:  uvicorn server:app --port 8000
 Test: curl -X POST localhost:8000/chat -H "Content-Type: application/json" -d '{"message": "hi"}'"""
+import base64
 import json
 import queue
 import re
@@ -12,6 +13,7 @@ import memory
 import chats
 import harness
 from typing import Optional
+from files import text_from
 from assistant import system_prompt, respond, unload_skills, add_memory_hint, check_missed_save, clear_memory_hints, pending_delete
 
 app = FastAPI()
@@ -23,8 +25,13 @@ file_lock = threading.Lock()   # chat files: so a rename and a save never write 
 turn_starts = []   # where each user turn starts in messages, so an edit knows where to cut
 current = None     # the open chat's info (id, title, folder, pinned, turns), or None before the first message
 
+class FileIn(BaseModel):
+    name: str
+    data: str   # the file's bytes in base64 (text made of letters and digits), so it fits inside JSON
+
 class ChatIn(BaseModel):
     message: str
+    files: list[FileIn] = []   # files dragged into the chat or picked with the paperclip
     chat_id: Optional[str] = None   # which saved chat this message is for; None starts a new one
     edit: Optional[int] = None   # set when the user edits an earlier message: which of their messages (0 = first)
 
@@ -75,14 +82,23 @@ def chat(body: ChatIn):
 
     def run():
         with lock:
-            opened = False
+            started = False
+            names, attached = [], ""
             try:
                 open_chat(body.chat_id)
-                opened = True   # only save the turn if its own chat is the one open
+                # read the files first: if one can't be read, stop before anything is added to the chat
+                for f in body.files:
+                    attached += f"\n\n[File: {f.name}]\n{text_from(f.name, base64.b64decode(f.data))}"   # same format as /file in the terminal
+                    names.append(f.name)
+                editing = body.edit is not None and body.edit < len(turn_starts)
+                if editing and not body.files:
+                    # an edited message keeps the files it was first sent with
+                    old = current["turns"][body.edit]
+                    names, attached = old.get("files", []), old.get("attached", "")
                 if current["title"] is None:
-                    current["title"] = chats.make_title(body.message)
+                    current["title"] = chats.make_title(body.message or names[0])   # a file-only message is named after the file
                 q.put({"type": "chat", "id": current["id"], "title": current["title"]})   # page learns the new chat's id
-                if body.edit is not None and body.edit < len(turn_starts):
+                if editing:
                     # editing: drop that message and everything after it, then answer the new text as if it were sent then
                     del messages[turn_starts[body.edit]:]
                     del turn_starts[body.edit:]
@@ -90,15 +106,19 @@ def chat(body: ChatIn):
                     pending_delete.clear()   # an old "are you sure?" must not be answered by an edited message
                 messages[0]["content"] = system_prompt()   # refresh, so new or deleted memories are current
                 turn_starts.append(len(messages))
-                messages.append({"role": "user", "content": add_memory_hint(body.message)})
+                started = True   # from here on this turn is in the chat, so it gets saved even if the model fails
+                messages.append({"role": "user", "content": add_memory_hint(body.message, attached)})
                 respond(messages, show=False, check=check_missed_save, emit=emit)
                 unload_skills(messages)
                 clear_memory_hints(messages)
             except Exception as e:
                 emit({"type": "error", "text": str(e)})
                 shown["text"] += "\n(error: " + str(e) + ")"
-            if opened:
-                current["turns"].append({"user": body.message, "bot": shown["text"]})
+            if started:
+                turn = {"user": body.message, "bot": shown["text"]}
+                if names:
+                    turn["files"], turn["attached"] = names, attached   # names for the page, text for edits
+                current["turns"].append(turn)
                 save_current()
             q.put({"type": "done"})
 
@@ -137,7 +157,9 @@ def list_chats():
 @app.get("/chats/{chat_id}")
 def get_chat(chat_id: str):
     c = chats.load(chat_id)
-    return {"id": c["id"], "title": c["title"], "turns": c["turns"]}
+    # the page only needs file names to redraw a chat, not the files' full text
+    turns = [{k: v for k, v in t.items() if k != "attached"} for t in c["turns"]]
+    return {"id": c["id"], "title": c["title"], "turns": turns}
 
 class ChatEdit(BaseModel):
     title: Optional[str] = None

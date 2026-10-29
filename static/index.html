@@ -4,13 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ornate</title>
+<!-- KaTeX draws LaTeX math. Loaded from a CDN; if it can't load (offline), math shows as plain text -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <style>
-  :root { --bg:#faf9f6; --panel:#fff; --text:#1d1d1b; --muted:#6b6a65; --line:#e6e3dc; --me:#1d1d1b; --me-text:#fff; --accent:#2f6fed; color-scheme:light; }
+  :root { --bg:#faf9f6; --panel:#fff; --text:#1d1d1b; --muted:#6b6a65; --line:#e6e3dc; --me:#2f6fed; --me-text:#fff; --accent:#2f6fed; --accent-soft:rgba(47,111,237,.11); color-scheme:light; }
   /* dark colors: when the Mac is in dark mode (unless Settings says Light), or when Settings says Dark */
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --bg:#161615; --panel:#1f1f1d; --text:#ecebe6; --muted:#9a988f; --line:#2f2e2b; --me:#ecebe6; --me-text:#161615; --accent:#5b8cff; color-scheme:dark; }
+    :root:not([data-theme="light"]) { --bg:#161615; --panel:#1f1f1d; --text:#ecebe6; --muted:#9a988f; --line:#2f2e2b; --me:#3567dd; --me-text:#fff; --accent:#5b8cff; --accent-soft:rgba(91,140,255,.16); color-scheme:dark; }
   }
-  :root[data-theme="dark"] { --bg:#161615; --panel:#1f1f1d; --text:#ecebe6; --muted:#9a988f; --line:#2f2e2b; --me:#ecebe6; --me-text:#161615; --accent:#5b8cff; color-scheme:dark; }
+  :root[data-theme="dark"] { --bg:#161615; --panel:#1f1f1d; --text:#ecebe6; --muted:#9a988f; --line:#2f2e2b; --me:#3567dd; --me-text:#fff; --accent:#5b8cff; --accent-soft:rgba(91,140,255,.16); color-scheme:dark; }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 -apple-system, system-ui, sans-serif; height:100vh; display:flex; }
   .main { flex:1; min-width:0; display:flex; flex-direction:column; }
@@ -19,13 +22,14 @@
   body.side-hidden #side { display:none; }
   .side-top { display:flex; gap:8px; padding:12px; }
   .side-top #newBtn { flex:1; }
+  .side-top #newBtn:hover { border-color:var(--accent); color:var(--accent); }
   #sideClose { border:none; background:none; color:var(--muted); font-size:18px; padding:0 6px; }
   #sideClose:hover { color:var(--text); }
   .side-list { flex:1; overflow-y:auto; padding:0 8px 16px; }
   .side-label { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; padding:14px 8px 4px; }
   .row { display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:8px; cursor:pointer; font-size:14px; }
-  .row:hover, .row.active { background:var(--bg); }
-  .row.active { font-weight:600; }
+  .row:hover { background:var(--bg); }
+  .row.active { background:var(--accent-soft); color:var(--accent); font-weight:600; }
   .row .name { flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
   .row .arrow, .row .count { color:var(--muted); font-size:12px; }
   .row .more { border:none; background:none; color:var(--muted); padding:0 4px; opacity:0; }
@@ -40,9 +44,9 @@
   .set-row .hint { font-size:12px; color:var(--muted); }
   .seg { display:flex; gap:4px; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:3px; }
   .seg button { flex:1; border:none; background:none; padding:5px 8px; border-radius:7px; color:var(--muted); }
-  .seg button.on { background:var(--panel); color:var(--text); font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,.15); }
+  .seg button.on { background:var(--panel); color:var(--accent); font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,.15); }
   .side-empty { color:var(--muted); font-size:13px; padding:4px 8px; }
-  #menu { position:fixed; display:none; min-width:190px; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:4px; box-shadow:0 10px 30px rgba(0,0,0,.18); z-index:20; }
+  #menu { position:fixed; display:none; min-width:190px; max-width:300px; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:4px; box-shadow:0 10px 30px rgba(0,0,0,.18); z-index:20; }
   #menu.open { display:block; }
   #menu button { display:block; width:100%; text-align:left; border:none; background:none; padding:7px 10px; border-radius:6px; }
   #menu button:hover { background:var(--bg); }
@@ -62,8 +66,11 @@
   #chat { flex:1; overflow-y:auto; padding:24px 20px; }
   .wrap { max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:14px; }
   .msg { padding:10px 14px; border-radius:14px; max-width:85%; white-space:pre-wrap; word-wrap:break-word; }
-  .me { align-self:flex-end; background:var(--me); color:var(--me-text); }
-  .bot { align-self:flex-start; background:var(--panel); border:1px solid var(--line); }
+  .me { align-self:flex-end; background:var(--me); color:var(--me-text); border-bottom-right-radius:5px; }
+  .bot { align-self:flex-start; background:var(--panel); border:1px solid var(--line); border-bottom-left-radius:5px; }
+  .bot .h { font-weight:700; }
+  .bot :not(pre) > code { background:var(--accent-soft); padding:1px 5px; border-radius:5px; }
+  ::selection { background:var(--accent-soft); }
   .bot pre { background:var(--bg); border:1px solid var(--line); padding:10px; border-radius:8px; overflow-x:auto; white-space:pre; }
   .bot code { font:13px ui-monospace, Menlo, monospace; }
   .note { align-self:center; color:var(--muted); font-size:13px; }
@@ -100,14 +107,26 @@
   .qitem span { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .qitem button { font-size:12px; padding:3px 8px; }
   form { border-top:1px solid var(--line); padding:14px 20px; }
+  #attachList { max-width:760px; margin:0 auto; display:flex; flex-wrap:wrap; gap:6px; }
+  #attachList:not(:empty) { margin-bottom:8px; }
+  .chip { display:inline-flex; align-items:center; gap:4px; font-size:13px; padding:4px 6px 4px 10px; border:1px solid var(--line); border-radius:999px; background:var(--panel); }
+  .chip button { border:none; background:none; color:var(--muted); padding:0 4px; font-size:12px; }
+  .chip.warn { color:#e5484d; padding-right:10px; }
+  #attachBtn { border:none; background:none; color:var(--muted); padding:0 6px; display:flex; align-items:center; }
+  #attachBtn:hover { color:var(--accent); }
+  #dropZone { position:fixed; inset:12px; z-index:30; display:none; align-items:center; justify-content:center; font-size:20px; font-weight:600; color:var(--accent); border:2px dashed var(--accent); border-radius:18px; background:color-mix(in srgb, var(--bg) 85%, transparent); }
+  #dropZone.show { display:flex; }
+  .files { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .file { font-size:13px; padding:2px 8px; border-radius:999px; background:rgba(255,255,255,.18); }
+  .katex-display { margin:.4em 0; overflow-x:auto; overflow-y:hidden; }
   form .wrap { flex-direction:row; gap:10px; }
   textarea { flex:1; font:inherit; resize:none; border:1px solid var(--line); background:var(--panel); color:var(--text); border-radius:12px; padding:10px 14px; height:46px; max-height:160px; }
-  textarea:focus { outline:none; border-color:var(--muted); }
+  textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
   #send { background:var(--accent); color:#fff; border:none; border-radius:12px; padding:0 18px; }
   #send:disabled { opacity:.5; cursor:default; }
 </style>
 </head>
-<body>
+<body class="side-hidden">   <!-- sidebar starts closed; ☰ opens it -->
 <aside id="side">
   <div class="side-top">
     <button id="newBtn">+ New chat</button>
@@ -148,9 +167,15 @@
   </div>
 </div>
 <div id="chat"><div class="wrap" id="log"><div class="welcome"><h2>Welcome to Ornate</h2><p>Runs locally on this Mac. Ask anything.</p></div></div></div>
+<div id="dropZone">Drop files to attach</div>
 <form id="form">
   <div id="queue"></div>
+  <div id="attachList"></div>
   <div class="wrap">
+    <button id="attachBtn" type="button" title="Attach a text file or PDF" aria-label="Attach a file">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.1l-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg>
+    </button>
+    <input type="file" id="filePick" multiple hidden>
     <textarea id="box" placeholder="Message Ornate…" autofocus></textarea>
     <button id="send" type="submit">Send</button>
   </div>
@@ -160,15 +185,45 @@
 const log = document.getElementById("log"), box = document.getElementById("box"),
       send = document.getElementById("send"), chat = document.getElementById("chat");
 
-// turn the model's markdown into safe HTML: escape first, then code blocks, inline code, bold
-function render(text) {
-  let t = text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  // code blocks: also eat the blank lines around them, or pre-wrap shows big gaps
-  t = t.replace(/\n*```\w*\n?([\s\S]*?)\n?```\n*/g, (_, c) => `<pre><code>${c}</code></pre>`);
-  t = t.replace(/`([^`\n]+)`/g, "<code>$1</code>");
-  t = t.replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>");
-  return t;
+// make text safe to put in HTML: < and > become harmless symbols instead of tags
+const esc = t => t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+// LaTeX to HTML with KaTeX; if KaTeX didn't load or the LaTeX is broken, show the original text
+function tex(src, whole, display) {
+  if (!window.katex) return esc(whole);
+  try { return katex.renderToString(src, { displayMode: display, throwOnError: false }); }
+  catch { return esc(whole); }
 }
+
+// turn the model's markdown into safe HTML.
+// Code and math are set aside first (swapped for a placeholder), so bold and escaping can't mangle them,
+// then the rest is escaped and bolded, and the set-aside pieces are put back.
+function render(text) {
+  const saved = [];
+  const keep = html => "\u0000" + (saved.push(html) - 1) + "\u0000";
+  let t = text;
+  // code blocks: also eat the blank lines around them, or pre-wrap shows big gaps
+  t = t.replace(/\n*```\w*\n?([\s\S]*?)\n?```\n*/g, (_, c) => keep(`<pre><code>${esc(c)}</code></pre>`));
+  t = t.replace(/`([^`\n]+)`/g, (_, c) => keep(`<code>${esc(c)}</code>`));
+  // headings ("### Step 1") and bullets ("- item"), at the start of a line. Only the tags are set aside,
+  // so math inside a heading still gets drawn.
+  t = t.replace(/^#{1,6} +(.+)$/gm, (_, h) => keep('<span class="h">') + h + keep("</span>"));
+  t = t.replace(/^[-*] +/gm, "• ");
+  // display math on its own line: $$ ... $$ or \[ ... \]
+  t = t.replace(/\n*\$\$([\s\S]+?)\$\$\n*|\n*\\\[([\s\S]+?)\\\]\n*/g, (m, a, b) => keep(tex(a ?? b, m, true)));
+  // inline math: \( ... \) or $ ... $
+  t = t.replace(/\\\(([\s\S]+?)\\\)/g, (m, a) => keep(tex(a, m, false)));
+  // a $...$ pair is math if it hugs the text ("$x$") or has a LaTeX symbol in it ("$ x^3 \sin x $", Qwen's usual style).
+  // Money like "$5 and $10" has neither, so it stays plain text.
+  t = t.replace(/\$([^$\n]+?)\$(?!\d)/g, (m, a) => /^\S(.*\S)?$/.test(a) || /[\\^_{}=]/.test(a) ? keep(tex(a, m, false)) : m);
+  t = esc(t);
+  t = t.replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>");
+  return t.replace(/\u0000(\d+)\u0000/g, (_, i) => saved[i]);
+}
+
+// file names shown inside your message, like "📎 notes.pdf"
+const fileChips = names => names.length
+  ? '<div class="files">' + names.map(n => `<span class="file">📎 ${esc(n)}</span>`).join("") + "</div>" : "";
 
 function add(cls, html) {
   const d = document.createElement("div");
@@ -199,11 +254,11 @@ const queueDiv = document.getElementById("queue");
 
 function renderQueue() {
   queueDiv.innerHTML = "";
-  queue.forEach((text, i) => {
+  queue.forEach((item, i) => {
     const row = document.createElement("div");
     row.className = "qitem";
     const label = document.createElement("span");
-    label.textContent = "Queued: " + text;
+    label.textContent = "Queued: " + item.text + (item.files.length ? `  📎 ${item.files.length}` : "");
     row.appendChild(label);
     if (i > 0) {   // "send next" moves it to the front of the line
       const next = document.createElement("button");
@@ -222,10 +277,12 @@ function renderQueue() {
 function sendMessage(e) {
   e.preventDefault();
   const text = box.value.trim();
-  if (!text) return;
+  if (!text && !attachments.length) return;   // a file alone is fine to send
   box.value = "";
-  if (busy || switching) { queue.push(text); renderQueue(); }
-  else run(text);
+  const files = attachments;
+  attachments = []; renderAttachments();
+  if (busy || switching) { queue.push({ text, files }); renderQueue(); }
+  else run(text, null, files);
 }
 
 // a small "Copy" button under each finished answer; copies the raw text, markdown included
@@ -269,16 +326,17 @@ function startEdit(bubble, bar, text) {
   bubble.append(area, buttons);
   area.focus(); area.setSelectionRange(text.length, text.length);
 
-  const stop = () => { bubble.className = "msg me"; bubble.innerHTML = render(text); bar.style.display = ""; };
+  const names = bubble._names || [];   // files sent with this message
+  const stop = () => { bubble.className = "msg me"; bubble.innerHTML = render(text) + fileChips(names); bar.style.display = ""; };
   const submit = () => {
     const newText = area.value.trim();
-    if (!newText || busy) return;
+    if ((!newText && !names.length) || busy) return;
     // which of your messages this is (0 = first); the server uses it to know where to cut
     const turn = [...log.querySelectorAll(".msg.me")].indexOf(bubble);
     // remove this message and everything after it on the page
     while (bubble.nextSibling) bubble.nextSibling.remove();
     bubble.remove();
-    run(newText, turn);
+    run(newText, turn, [], names);
   };
   cancel.onclick = stop;
   save.onclick = submit;
@@ -289,14 +347,17 @@ function startEdit(bubble, bar, text) {
   });
 }
 
-async function run(text, edit = null) {
+// files = [{name, data}] to send; names = what to show (on an edit, the old files' names)
+async function run(text, edit = null, files = [], names = files.map(f => f.name)) {
   busy = true;
   log.querySelector(".welcome")?.remove();
-  addEditButton(add("me", render(text)), text);
+  const mine = add("me", render(text) + fileChips(names));
+  mine._names = names;
+  addEditButton(mine, text);
   const bubble = add("bot typing", "thinking…");
   let answer = "";
   try {
-    const r = await fetch("/chat", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ message: text, chat_id: activeId, edit }) });
+    const r = await fetch("/chat", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ message: text, chat_id: activeId, edit, files }) });
     // read the reply piece by piece; each line is one JSON event from the server
     const reader = r.body.getReader(), decoder = new TextDecoder();
     let buffer = "";
@@ -312,6 +373,7 @@ async function run(text, edit = null) {
         if (ev.type === "chat") {
           // the server says which saved chat this is (a new chat gets its id here)
           activeId = ev.id;
+          history.replaceState(null, "", "#" + ev.id);   // keep it in the address bar, so a refresh reopens it
           loadSidebar();
         } else if (ev.type === "text") {
           answer += ev.text;
@@ -342,8 +404,60 @@ async function run(text, edit = null) {
   }
   busy = false; box.focus();
   loadSidebar();   // this chat just moved to the top
-  if (queue.length) { const next = queue.shift(); renderQueue(); run(next); }
+  if (queue.length) { const next = queue.shift(); renderQueue(); run(next.text, null, next.files); }
 }
+
+// ---------- attaching files: paperclip button or drag-and-drop ----------
+let attachments = [];   // files waiting to go out with your next message: {name, data}
+const attachList = document.getElementById("attachList"), dropZone = document.getElementById("dropZone");
+const MAX_FILE_MB = 10;
+
+let attachWarning = "", warningTimer;
+// a red note like "Images aren't supported yet". Kept in a variable so redrawing the chips doesn't wipe it; fades after 5 s.
+function warn(text) {
+  attachWarning = text; renderAttachments();
+  clearTimeout(warningTimer);
+  warningTimer = setTimeout(() => { attachWarning = ""; renderAttachments(); }, 5000);
+}
+
+function renderAttachments() {
+  attachList.innerHTML = "";
+  attachments.forEach((f, i) => {
+    const chip = el("span", "chip", "📎 " + f.name);
+    const x = el("button", "", "✕");
+    x.type = "button"; x.title = "Remove";
+    x.onclick = () => { attachments.splice(i, 1); renderAttachments(); };
+    chip.appendChild(x);
+    attachList.appendChild(chip);
+  });
+  if (attachWarning) attachList.appendChild(el("span", "chip warn", attachWarning));
+}
+
+function addFiles(list) {
+  for (const f of list) {
+    // checked here so you find out right away; the server checks again when it reads the file
+    if (f.type.startsWith("image/")) { warn(`Images aren't supported yet: ${f.name}`); continue; }
+    if (f.size > MAX_FILE_MB * 1024 * 1024) { warn(`${f.name} is over ${MAX_FILE_MB} MB`); continue; }
+    const reader = new FileReader();
+    // readAsDataURL gives "data:...;base64,XXXX"; the part after the comma is the file as base64 text
+    reader.onload = () => { attachments.push({ name: f.name, data: reader.result.split(",")[1] }); renderAttachments(); };
+    reader.readAsDataURL(f);
+  }
+  box.focus();
+}
+
+const filePick = document.getElementById("filePick");
+document.getElementById("attachBtn").onclick = () => filePick.click();
+filePick.onchange = () => { addFiles(filePick.files); filePick.value = ""; };
+
+// dragging files over the window shows a big drop target; dropping them attaches them
+window.addEventListener("dragover", e => {
+  if (![...e.dataTransfer.types].includes("Files")) return;   // ignore dragged text
+  e.preventDefault();   // without this the browser would open the file instead
+  dropZone.classList.add("show");
+});
+dropZone.addEventListener("dragleave", () => dropZone.classList.remove("show"));
+dropZone.addEventListener("drop", e => { e.preventDefault(); dropZone.classList.remove("show"); addFiles(e.dataTransfer.files); });
 
 document.getElementById("form").addEventListener("submit", sendMessage);
 // Enter sends, Shift+Enter makes a new line
@@ -374,9 +488,14 @@ function el(tag, cls, text) {
   return e;
 }
 
+let sidebarCall = 0;
 async function loadSidebar() {
+  const me = ++sidebarCall;   // number this load
   let chats, folders;
-  try { ({ chats, folders } = await api("GET", "/chats")); }
+  try {
+    ({ chats, folders } = await api("GET", "/chats"));
+    if (me !== sidebarCall) return;   // a newer load started while this one waited: let that one draw, so old data never wins
+  }
   catch {
     // say so, instead of quietly showing an empty list (an old server doesn't know /chats: restart uvicorn)
     sideList.innerHTML = "";
@@ -511,11 +630,14 @@ async function openChat(id) {
   if (busy || id === activeId) return;   // don't switch chats while an answer is being written
   const c = await api("GET", "/chats/" + id);
   activeId = id;
+  history.replaceState(null, "", "#" + id);   // address bar shows the chat (no reload, no extra Back step)
   queue.length = 0; renderQueue();
   log.innerHTML = "";
   // redraw each turn the way it looked: your message with Edit, the answer with Copy
   for (const t of c.turns) {
-    addEditButton(add("me", render(t.user)), t.user);
+    const mine = add("me", render(t.user) + fileChips(t.files || []));
+    mine._names = t.files || [];
+    addEditButton(mine, t.user);
     const b = add("bot", t.bot ? render(t.bot) : "(no reply)");
     if (t.bot) addCopyButton(b, t.bot);
   }
@@ -526,6 +648,7 @@ async function openChat(id) {
 function newChat() {
   if (busy) return;   // wait for the current answer first
   activeId = null;   // the server makes the chat when its first message is sent, so empty chats are never saved
+  history.replaceState(null, "", location.pathname);
   queue.length = 0; renderQueue();
   log.innerHTML = WELCOME;
   if (narrow()) document.body.classList.add("side-hidden");
@@ -554,8 +677,13 @@ document.getElementById("sideBtn").onclick = e => {
 document.getElementById("sideClose").onclick = () => document.body.classList.add("side-hidden");
 // on narrow screens, clicking the chat area next to the open sidebar also closes it
 document.querySelector(".main").addEventListener("click", () => { if (narrow()) document.body.classList.add("side-hidden"); });
-if (narrow()) document.body.classList.add("side-hidden");
 loadSidebar();
+// reopen the chat named in the address bar (after a refresh); if it was deleted, start fresh
+// waits for DOMContentLoaded, which comes after KaTeX has loaded, so the chat's math gets drawn
+document.addEventListener("DOMContentLoaded", () => {
+  const startId = location.hash.slice(1);
+  if (/^[0-9a-f]{12}$/.test(startId)) openChat(startId).catch(newChat);
+});
 
 // ---------- model picker: Baroque (30B) or Filigree (8B) ----------
 const modelBtn = document.getElementById("modelBtn");
@@ -574,7 +702,10 @@ modelBtn.onclick = async e => {
   e.stopPropagation();   // otherwise this same click reaches the "click anywhere closes the menu" rule
   if (busy || switching) return;   // never switch in the middle of an answer
   const m = await loadModels();
-  if (!m) return;
+  if (!m) {   // say why instead of doing nothing (usually a server started before this code existed)
+    showMenu(modelBtn, [{ heading: "Couldn't load models. Restart the server (ctrl+C, then uvicorn again) and refresh." }]);
+    return;
+  }
   showMenu(modelBtn, m.models.map(x => ({
     label: (x.key === m.current ? "✓ " : "") + x.name, sub: x.about,
     fn: () => { if (x.key !== m.current) switchModel(x); },
@@ -590,7 +721,7 @@ async function switchModel(x) {
   switching = false; send.disabled = false;
   if (!r.ok) alert("Couldn't switch models: " + r.error);
   await loadModels();
-  if (queue.length && !busy) { const next = queue.shift(); renderQueue(); run(next); }   // send anything typed while it loaded
+  if (queue.length && !busy) { const next = queue.shift(); renderQueue(); run(next.text, null, next.files); }   // send anything typed while it loaded
 }
 loadModels();
 
