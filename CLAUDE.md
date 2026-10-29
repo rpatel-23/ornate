@@ -21,14 +21,14 @@ python eval_memory.py               # 13 forget/memory messages on a fake memory
 python eval_hard.py / eval_skill.py # math and missed-question evals
 ```
 
-`ORNATE_MODEL=...` switches model. `ORNATE_THINK=1/0` forces thinking on/off (default auto). Page-only changes need a hard refresh (cmd+shift+R), not a server restart.
+`ORNATE_MODEL=...` picks the starting model. The web app also has a picker: Baroque = Qwen3 30B-A3B, Filigree = Qwen3 8B (`MODELS` in harness.py); switching unloads the old model first. `ORNATE_THINK=1/0` forces thinking on/off (default auto). Page-only changes need a hard refresh (cmd+shift+R), not a server restart.
 
 ## Files
 
-- `harness.py`: model loading, `ask_model` (streaming, optional `emit` for the web), `respond` (agent loop, up to 5 tool rounds, optional `check` retry), `find_tool_call` (also accepts a bare `name {json}` call), `add_tool` registry, `run_python`.
+- `harness.py`: `MODELS` and `use_model` (load/switch, one model in memory at a time), `ask_model` (streaming, optional `emit` for the web), `respond` (agent loop, up to 5 tool rounds, optional `check` retry), `find_tool_call` (also accepts a bare `name {json}` call), `add_tool` registry, `run_python`.
 - `assistant.py`: tools (`load_skill`, `start_quiz`, `web_search`, `remember`, `forget`), skill menu, system prompt, memory rules (`is_save_request`, `is_delete_request`, `add_memory_hint`, `clear_memory_hints`, `check_missed_save`, `handle_delete_reply`).
 - `memory.py`: facts in `memory.json` (git-ignored, personal, never commit it).
-- `agent.py`: terminal chat and slash commands. `server.py` + `static/index.html`: FastAPI web app (NDJSON streaming, lock, queue, memory popup, copy, edit a sent message, sidebar). `chats.py`: saved chats as JSON files in `chats/` (git-ignored, personal), folders in `chats/folders.json`. `quiz.py`, `files.py`, `skills/`, `styles/`.
+- `agent.py`: terminal chat and slash commands. `server.py` + `static/index.html`: FastAPI web app (NDJSON streaming, lock, queue, memory popup, copy, edit a sent message, sidebar, settings panel: theme in the browser, thinking mode on the server until restart). `chats.py`: saved chats as JSON files in `chats/` (git-ignored, personal), folders in `chats/folders.json`. `quiz.py`, `files.py`, `skills/`, `styles/`.
 - `tokenizer.py`, `data.py`, `bigram.py`, `gpt.py`: the tiny GPT from the start of the project.
 - `EVALS.md`: every eval with numbers and findings. `results/`: saved transcripts.
 
@@ -48,9 +48,11 @@ python eval_hard.py / eval_skill.py # math and missed-question evals
 - Multi-turn behavior isn't covered by any eval (all routing tests are single messages).
 - The web page used to show "(no reply)" when the model wrote its answer inside a thinking block it never closed (seen after the missed-question skill). `ask_model` now sends that text to the page, like the terminal does.
 - `run_python` is not sandboxed. LaTeX math shows raw in the web app. Saved chats: the model still sees one chat at a time (switching loads it from disk); a chat's title is its first message, cut to 40 letters.
+- Model picker, measured 2026-10-28 (one 200-word answer each): Baroque 22.8 words/s, Filigree 19.7 words/s; server memory 16 GB vs 4.9 GB; switching takes 1 to 3 s once files are cached. The 8B's win is memory, not speed. Routing and memory evals have only been run on the 30B.
 - The 30B MoE beat a dense 32B (same or better scores, ~8x faster), so Ornate stays on the 30B.
 
 ## Next up
 
 1. Web app: design pass (blue accent, LaTeX rendering, drag-and-drop files).
-2. Then: vision, RAG over class notes, multi-language code runner with a sandbox, fine-tuning with before/after evals, Windows port (RTX 4070, 8 GB VRAM).
+2. Windows port (laptop with RTX 4070, 8 GB VRAM). MLX is Mac-only, so harness.py needs a second engine: llama-cpp-python with CUDA and GGUF files, picked by platform, keeping the Baroque/Filigree names. Filigree (8B, ~5 GB at 4-bit) fits in VRAM; Baroque (30B MoE, ~17 GB) needs its expert layers kept in system RAM, so check the laptop's RAM first.
+3. Then: vision, RAG over class notes, multi-language code runner with a sandbox, fine-tuning with before/after evals.

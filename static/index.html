@@ -5,10 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ornate</title>
 <style>
-  :root { --bg:#faf9f6; --panel:#fff; --text:#1d1d1b; --muted:#6b6a65; --line:#e6e3dc; --me:#1d1d1b; --me-text:#fff; --accent:#2f6fed; }
+  :root { --bg:#faf9f6; --panel:#fff; --text:#1d1d1b; --muted:#6b6a65; --line:#e6e3dc; --me:#1d1d1b; --me-text:#fff; --accent:#2f6fed; color-scheme:light; }
+  /* dark colors: when the Mac is in dark mode (unless Settings says Light), or when Settings says Dark */
   @media (prefers-color-scheme: dark) {
-    :root { --bg:#161615; --panel:#1f1f1d; --text:#ecebe6; --muted:#9a988f; --line:#2f2e2b; --me:#ecebe6; --me-text:#161615; --accent:#5b8cff; }
+    :root:not([data-theme="light"]) { --bg:#161615; --panel:#1f1f1d; --text:#ecebe6; --muted:#9a988f; --line:#2f2e2b; --me:#ecebe6; --me-text:#161615; --accent:#5b8cff; color-scheme:dark; }
   }
+  :root[data-theme="dark"] { --bg:#161615; --panel:#1f1f1d; --text:#ecebe6; --muted:#9a988f; --line:#2f2e2b; --me:#ecebe6; --me-text:#161615; --accent:#5b8cff; color-scheme:dark; }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 -apple-system, system-ui, sans-serif; height:100vh; display:flex; }
   .main { flex:1; min-width:0; display:flex; flex-direction:column; }
@@ -17,6 +19,8 @@
   body.side-hidden #side { display:none; }
   .side-top { display:flex; gap:8px; padding:12px; }
   .side-top #newBtn { flex:1; }
+  #sideClose { border:none; background:none; color:var(--muted); font-size:18px; padding:0 6px; }
+  #sideClose:hover { color:var(--text); }
   .side-list { flex:1; overflow-y:auto; padding:0 8px 16px; }
   .side-label { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; padding:14px 8px 4px; }
   .row { display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:8px; cursor:pointer; font-size:14px; }
@@ -28,6 +32,15 @@
   .row:hover .more, .row.active .more { opacity:1; }
   .row input { flex:1; min-width:0; font:inherit; font-size:14px; border:1px solid var(--accent); border-radius:6px; padding:2px 6px; background:var(--panel); color:var(--text); outline:none; }
   .folder-chats { padding-left:14px; }
+  .side-bottom { border-top:1px solid var(--line); padding:8px; }
+  .side-bottom button { width:100%; text-align:left; border:none; background:none; color:var(--muted); padding:8px 10px; }
+  .side-bottom button:hover { background:var(--bg); color:var(--text); }
+  .set-row { padding:8px 20px 14px; display:flex; flex-direction:column; gap:8px; }
+  .set-row .title { font-size:14px; font-weight:600; }
+  .set-row .hint { font-size:12px; color:var(--muted); }
+  .seg { display:flex; gap:4px; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:3px; }
+  .seg button { flex:1; border:none; background:none; padding:5px 8px; border-radius:7px; color:var(--muted); }
+  .seg button.on { background:var(--panel); color:var(--text); font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,.15); }
   .side-empty { color:var(--muted); font-size:13px; padding:4px 8px; }
   #menu { position:fixed; display:none; min-width:190px; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:4px; box-shadow:0 10px 30px rgba(0,0,0,.18); z-index:20; }
   #menu.open { display:block; }
@@ -40,6 +53,9 @@
   header { display:flex; align-items:center; gap:12px; padding:12px 20px; border-bottom:1px solid var(--line); }
   header h1 { font-size:18px; margin:0; flex:1; letter-spacing:.02em; }
   #sideBtn { border:none; background:none; font-size:18px; padding:2px 6px; }
+  #modelBtn { border:none; background:none; font-weight:600; }
+  #modelBtn:hover { background:var(--panel); }
+  #menu .sub { display:block; font-size:12px; color:var(--muted); font-weight:normal; margin-top:1px; }
   header h1 span { color:var(--accent); }
   button { font:inherit; font-size:14px; border:1px solid var(--line); background:var(--panel); color:var(--text); border-radius:8px; padding:6px 12px; cursor:pointer; }
   button:hover { border-color:var(--muted); }
@@ -96,15 +112,33 @@
   <div class="side-top">
     <button id="newBtn">+ New chat</button>
     <button id="folderBtn" title="New folder">+ Folder</button>
+    <button id="sideClose" title="Hide chats" aria-label="Hide chats">«</button>
   </div>
   <div class="side-list" id="sideList"></div>
+  <div class="side-bottom"><button id="setBtn">⚙︎ Settings</button></div>
 </aside>
+<div class="overlay" id="setOverlay">
+  <div class="modal" role="dialog" aria-label="Settings">
+    <div class="modal-head"><h3>Settings</h3><span class="count"></span><button id="setClose" aria-label="Close">✕</button></div>
+    <div class="set-row">
+      <div class="title">Memory</div>
+      <button id="memBtn" type="button">Manage memory</button>
+      <div class="hint">Facts Ornate saves when you ask it to remember something. Used in every chat.</div>
+    </div>
+    <div class="set-row"><div class="title">Appearance</div><div class="seg" id="themeSeg"></div></div>
+    <div class="set-row">
+      <div class="title">Thinking</div><div class="seg" id="thinkSeg"></div>
+      <div class="hint">Auto thinks only after loading a skill or searching the web. Always is slower but more careful. Resets when the server restarts.</div>
+    </div>
+    <div class="modal-foot" id="setModel"></div>
+  </div>
+</div>
 <div id="menu"></div>
 <div class="main">
 <header>
   <button id="sideBtn" title="Show or hide chats" aria-label="Show or hide chats">☰</button>
   <h1>Ornate<span>.</span></h1>
-  <button id="memBtn">Memory</button>
+  <button id="modelBtn" title="Pick a model">Model ▾</button>
 </header>
 <div class="overlay" id="memOverlay">
   <div class="modal" role="dialog" aria-label="Memory">
@@ -190,7 +224,7 @@ function sendMessage(e) {
   const text = box.value.trim();
   if (!text) return;
   box.value = "";
-  if (busy) { queue.push(text); renderQueue(); }
+  if (busy || switching) { queue.push(text); renderQueue(); }
   else run(text);
 }
 
@@ -328,6 +362,7 @@ const saveCollapsed = () => { try { localStorage.setItem("ornate-collapsed", JSO
 
 async function api(method, url, body) {
   const r = await fetch(url, { method, headers: {"Content-Type":"application/json"}, body: body && JSON.stringify(body) });
+  if (!r.ok) throw new Error(method + " " + url + " failed (" + r.status + ")");   // e.g. 404 from a server that wasn't restarted
   return r.json();
 }
 const patchChat = (id, body) => api("PATCH", "/chats/" + id, body);
@@ -340,7 +375,14 @@ function el(tag, cls, text) {
 }
 
 async function loadSidebar() {
-  const { chats, folders } = await api("GET", "/chats");
+  let chats, folders;
+  try { ({ chats, folders } = await api("GET", "/chats")); }
+  catch {
+    // say so, instead of quietly showing an empty list (an old server doesn't know /chats: restart uvicorn)
+    sideList.innerHTML = "";
+    sideList.appendChild(el("div", "side-empty", "Couldn't load chats. Restart the server (ctrl+C, then uvicorn again) and refresh."));
+    return;
+  }
   sideList.innerHTML = "";
   const pinned = chats.filter(c => c.pinned);
   if (pinned.length) {
@@ -350,13 +392,11 @@ async function loadSidebar() {
   if (folders.length) sideList.appendChild(el("div", "side-label", "Folders"));
   folders.forEach(f => {
     const inside = chats.filter(c => !c.pinned && c.folder === f);   // pinned chats show only under Pinned
-    sideList.appendChild(folderRow(f, inside.length));
-    if (!collapsed[f]) {
-      const box = el("div", "folder-chats");
-      inside.forEach(c => box.appendChild(chatRow(c, folders)));
-      if (!inside.length) box.appendChild(el("div", "side-empty", "Empty"));
-      sideList.appendChild(box);
-    }
+    const box = el("div", "folder-chats");
+    inside.forEach(c => box.appendChild(chatRow(c, folders)));
+    if (!inside.length) box.appendChild(el("div", "side-empty", "Empty"));
+    box.hidden = !!collapsed[f];   // folded folders keep their chats, just hidden
+    sideList.append(folderRow(f, inside.length, box), box);
   });
   const rest = chats.filter(c => !c.pinned && !folders.includes(c.folder));
   sideList.appendChild(el("div", "side-label", "Chats"));
@@ -390,12 +430,18 @@ function chatRow(c, folders) {
   return row;
 }
 
-function folderRow(f, count) {
+function folderRow(f, count, box) {
   const row = el("div", "row");
   const name = el("span", "name", f);
   const more = el("button", "more", "⋯");
-  row.append(el("span", "arrow", collapsed[f] ? "▸" : "▾"), name, el("span", "count", count || ""), more);
-  row.onclick = () => { collapsed[f] = !collapsed[f]; saveCollapsed(); loadSidebar(); };
+  const arrow = el("span", "arrow", collapsed[f] ? "▸" : "▾");
+  row.append(arrow, name, el("span", "count", count || ""), more);
+  // fold or unfold right here on the page: no trip to the server, so it's instant even while Ornate is answering
+  row.onclick = () => {
+    collapsed[f] = !collapsed[f]; saveCollapsed();
+    box.hidden = collapsed[f];
+    arrow.textContent = collapsed[f] ? "▸" : "▾";
+  };
   more.onclick = e => {
     e.stopPropagation();
     showMenu(more, [
@@ -445,6 +491,7 @@ function showMenu(anchor, items) {
     else if (it.heading) menu.appendChild(el("div", "label", it.heading));
     else {
       const b = el("button", it.cls || "", it.label);
+      if (it.sub) b.appendChild(el("span", "sub", it.sub));   // small grey line under the label
       // every action changes something on disk, so redraw the sidebar after it
       b.onclick = async () => { closeMenu(); await it.fn(); loadSidebar(); };
       menu.appendChild(b);
@@ -499,9 +546,95 @@ document.getElementById("folderBtn").onclick = async () => {
   if (n) await api("POST", "/folders", { name: n });
   loadSidebar();
 };
-document.getElementById("sideBtn").onclick = () => document.body.classList.toggle("side-hidden");
+document.getElementById("sideBtn").onclick = e => {
+  e.stopPropagation();   // ☰ is inside the chat area; without this the "click outside closes it" rule below would shut it right away
+  document.body.classList.toggle("side-hidden");
+};
+// the « button in the sidebar hides it. On narrow screens the sidebar covers the ☰ button, so this is the way out.
+document.getElementById("sideClose").onclick = () => document.body.classList.add("side-hidden");
+// on narrow screens, clicking the chat area next to the open sidebar also closes it
+document.querySelector(".main").addEventListener("click", () => { if (narrow()) document.body.classList.add("side-hidden"); });
 if (narrow()) document.body.classList.add("side-hidden");
 loadSidebar();
+
+// ---------- model picker: Baroque (30B) or Filigree (8B) ----------
+const modelBtn = document.getElementById("modelBtn");
+let switching = false;   // true while a model is loading
+
+async function loadModels() {
+  try {
+    const m = await api("GET", "/models");
+    const cur = m.models.find(x => x.key === m.current);
+    modelBtn.textContent = (cur ? cur.name : m.repo.split("/").pop()) + " ▾";
+    return m;
+  } catch { modelBtn.textContent = "Model ▾"; }
+}
+
+modelBtn.onclick = async e => {
+  e.stopPropagation();   // otherwise this same click reaches the "click anywhere closes the menu" rule
+  if (busy || switching) return;   // never switch in the middle of an answer
+  const m = await loadModels();
+  if (!m) return;
+  showMenu(modelBtn, m.models.map(x => ({
+    label: (x.key === m.current ? "✓ " : "") + x.name, sub: x.about,
+    fn: () => { if (x.key !== m.current) switchModel(x); },
+  })));
+};
+
+async function switchModel(x) {
+  switching = true; send.disabled = true;
+  modelBtn.textContent = "Loading " + x.name + "…";   // loading takes a few seconds (longer for the 30B)
+  let r;
+  try { r = await api("POST", "/models", { key: x.key }); }
+  catch { r = { ok: false, error: "couldn't reach the server" }; }
+  switching = false; send.disabled = false;
+  if (!r.ok) alert("Couldn't switch models: " + r.error);
+  await loadModels();
+  if (queue.length && !busy) { const next = queue.shift(); renderQueue(); run(next); }   // send anything typed while it loaded
+}
+loadModels();
+
+// ---------- settings ----------
+const setOverlay = document.getElementById("setOverlay");
+
+// a row of buttons where one is picked, like a switch with 3 positions
+function seg(box, options, current, onPick) {
+  box.innerHTML = "";
+  for (const [value, label] of options) {
+    const b = el("button", value === current ? "on" : "", label);
+    b.type = "button";
+    b.onclick = () => { onPick(value); seg(box, options, value, onPick); };
+    box.appendChild(b);
+  }
+}
+
+// theme: "system" follows the Mac; light/dark override it. Saved in this browser only.
+function applyTheme(t) {
+  if (t === "system") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", t);
+  try { localStorage.setItem("ornate-theme", t); } catch {}
+}
+let theme = "system";
+try { theme = localStorage.getItem("ornate-theme") || "system"; } catch {}
+applyTheme(theme);
+
+document.getElementById("setBtn").onclick = async () => {
+  setOverlay.classList.add("open");
+  seg(document.getElementById("themeSeg"), [["system","System"],["light","Light"],["dark","Dark"]], theme,
+      t => { theme = t; applyTheme(t); });
+  const thinkSeg = document.getElementById("thinkSeg"), modelLine = document.getElementById("setModel");
+  try {
+    const st = await api("GET", "/settings");
+    seg(thinkSeg, [["auto","Auto"],["always","Always"],["never","Never"]], st.think,
+        v => api("POST", "/settings", { think: v }));
+    modelLine.textContent = "Model: " + st.model;
+  } catch {
+    thinkSeg.innerHTML = ""; modelLine.textContent = "Couldn't reach the server. Restart it and refresh.";
+  }
+};
+const closeSet = () => setOverlay.classList.remove("open");
+document.getElementById("setClose").onclick = closeSet;
+setOverlay.onclick = e => { if (e.target === setOverlay) closeSet(); };   // click outside to close
 
 // memory popup: a scrollable list, with a delete button on each fact
 const overlay = document.getElementById("memOverlay"), memList = document.getElementById("memList"),
@@ -526,11 +659,12 @@ async function loadMemory() {
   });
 }
 
-document.getElementById("memBtn").onclick = () => { overlay.classList.add("open"); loadMemory(); };
+// "Manage memory" in Settings: close Settings, open the memory list
+document.getElementById("memBtn").onclick = () => { closeSet(); overlay.classList.add("open"); loadMemory(); };
 const closeMem = () => overlay.classList.remove("open");
 document.getElementById("memClose").onclick = closeMem;
 overlay.onclick = e => { if (e.target === overlay) closeMem(); };   // click outside to close
-document.addEventListener("keydown", e => { if (e.key === "Escape") { closeMem(); closeMenu(); } });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { closeMem(); closeMenu(); closeSet(); } });
 </script>
 </body>
 </html>

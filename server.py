@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 import memory
 import chats
+import harness
 from typing import Optional
 from assistant import system_prompt, respond, unload_skills, add_memory_hint, check_missed_save, clear_memory_hints, pending_delete
 
@@ -196,4 +197,44 @@ def delete_folder(name: str):
     with file_lock:
         chats.save_folders([n for n in chats.folders() if n != name])
         chats.set_folder_for_all(name, None)
+    return {"ok": True}
+
+# ---- settings panel ----
+
+@app.get("/settings")
+def get_settings():
+    return {"model": harness.MODEL, "think": harness.THINK_MODE}
+
+class SettingsIn(BaseModel):
+    think: str   # "auto", "always" or "never" (same as ORNATE_THINK)
+
+@app.post("/settings")
+def set_settings(body: SettingsIn):
+    """Change thinking mode until the server restarts. respond() reads these each time, so the next answer uses it."""
+    if body.think not in ("auto", "always", "never"):
+        return {"ok": False}
+    harness.THINK_MODE = body.think
+    harness.THINK = body.think == "always"
+    return {"ok": True}
+
+# ---- model picker (Baroque = 30B, Filigree = 8B; see MODELS in harness.py) ----
+
+@app.get("/models")
+def list_models():
+    current = next((k for k, m in harness.MODELS.items() if m["repo"] == harness.MODEL), None)   # None if ORNATE_MODEL is something else
+    return {"current": current, "repo": harness.MODEL,
+            "models": [{"key": k, "name": m["name"], "about": m["about"]} for k, m in harness.MODELS.items()]}
+
+class ModelIn(BaseModel):
+    key: str   # "baroque" or "filigree"
+
+@app.post("/models")
+def switch_model(body: ModelIn):
+    if body.key not in harness.MODELS:
+        return {"ok": False, "error": "unknown model"}
+    with lock:   # wait for any answer being written, so the model never changes mid-answer
+        try:
+            harness.use_model(harness.MODELS[body.key]["repo"])
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
     return {"ok": True}

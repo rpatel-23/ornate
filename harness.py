@@ -5,16 +5,45 @@ import subprocess
 import sys
 from mlx_lm import load, stream_generate
 
+import gc
 import os
+import mlx.core as mx
 
-MODEL = os.environ.get("ORNATE_MODEL", "mlx-community/Qwen3-30B-A3B-4bit")
+# the models you can pick in the web app. Names follow "Ornate": styles of decorative art.
+# Both scored about the same time on the math eval (EVALS.md section 2); the 8B's win is memory, not speed.
+MODELS = {
+    "baroque":  {"name": "Baroque",  "repo": "mlx-community/Qwen3-30B-A3B-4bit",
+                 "about": "Qwen3 30B-A3B. The smartest. Uses about 17 GB of memory."},
+    "filigree": {"name": "Filigree", "repo": "mlx-community/Qwen3-8B-4bit",
+                 "about": "Qwen3 8B. Lighter: about 5 GB of memory."},
+}
+
 # ORNATE_THINK=1: always think. ORNATE_THINK=0: never think.
 # Not set: think only after a tool that needs careful work.
 THINK_MODE = {"1": "always", "0": "never"}.get(os.environ.get("ORNATE_THINK"), "auto")
 THINK = THINK_MODE == "always"
 THINK_AFTER = {"load_skill", "web_search"}
-print("loading", MODEL)
-model, tokenizer = load(MODEL)
+
+MODEL = model = tokenizer = None
+
+def use_model(repo):
+    """Switch to another model. The old one is unloaded first, so only one is ever in memory."""
+    global MODEL, model, tokenizer
+    if repo == MODEL:
+        return
+    model = tokenizer = None   # drop the old model...
+    gc.collect()               # ...let Python free it...
+    mx.clear_cache()           # ...and hand MLX's freed memory back to the Mac
+    print("loading", repo)
+    try:
+        model, tokenizer = load(repo)
+    except Exception:
+        if MODEL:   # couldn't load the new one: put the old one back so Ornate still works, then report the error
+            model, tokenizer = load(MODEL)
+        raise
+    MODEL = repo
+
+use_model(os.environ.get("ORNATE_MODEL", MODELS["baroque"]["repo"]))
 
 SYSTEM = "You are Ornate, a helpful assistant."
 SYSTEM_TOOLS = SYSTEM + (

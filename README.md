@@ -44,7 +44,7 @@ All on the 30B-A3B model unless noted. Each set is small, so a gap of one or two
 | **Skills** | Instruction files the model loads on its own when a request matches (mistake analysis, quizzes) |
 | **Adaptive thinking** | Off for quick decisions, on after a skill or search, when the hard reasoning starts |
 | **Memory** | Saves and deletes only when asked, and deletes only after a "yes" in the chat |
-| **Web app** | Streaming answers, tool status, message queue, memory panel, copy buttons, message editing, saved chats with folders and pins |
+| **Web app** | Streaming answers, tool status, message queue, memory panel, copy buttons, message editing, saved chats with folders and pins, model picker (Baroque = 30B, Filigree = 8B) |
 | **Evals** | Math, routing, skills, memory, and model comparisons, with saved transcripts |
 
 ## Quick start
