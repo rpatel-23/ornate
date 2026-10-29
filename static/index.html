@@ -10,9 +10,36 @@
     :root { --bg:#161615; --panel:#1f1f1d; --text:#ecebe6; --muted:#9a988f; --line:#2f2e2b; --me:#ecebe6; --me-text:#161615; --accent:#5b8cff; }
   }
   * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 -apple-system, system-ui, sans-serif; height:100vh; display:flex; flex-direction:column; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 -apple-system, system-ui, sans-serif; height:100vh; display:flex; }
+  .main { flex:1; min-width:0; display:flex; flex-direction:column; }
+  /* sidebar: saved chats, folders, pins */
+  #side { width:260px; flex-shrink:0; border-right:1px solid var(--line); background:var(--panel); display:flex; flex-direction:column; }
+  body.side-hidden #side { display:none; }
+  .side-top { display:flex; gap:8px; padding:12px; }
+  .side-top #newBtn { flex:1; }
+  .side-list { flex:1; overflow-y:auto; padding:0 8px 16px; }
+  .side-label { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; padding:14px 8px 4px; }
+  .row { display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:8px; cursor:pointer; font-size:14px; }
+  .row:hover, .row.active { background:var(--bg); }
+  .row.active { font-weight:600; }
+  .row .name { flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+  .row .arrow, .row .count { color:var(--muted); font-size:12px; }
+  .row .more { border:none; background:none; color:var(--muted); padding:0 4px; opacity:0; }
+  .row:hover .more, .row.active .more { opacity:1; }
+  .row input { flex:1; min-width:0; font:inherit; font-size:14px; border:1px solid var(--accent); border-radius:6px; padding:2px 6px; background:var(--panel); color:var(--text); outline:none; }
+  .folder-chats { padding-left:14px; }
+  .side-empty { color:var(--muted); font-size:13px; padding:4px 8px; }
+  #menu { position:fixed; display:none; min-width:190px; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:4px; box-shadow:0 10px 30px rgba(0,0,0,.18); z-index:20; }
+  #menu.open { display:block; }
+  #menu button { display:block; width:100%; text-align:left; border:none; background:none; padding:7px 10px; border-radius:6px; }
+  #menu button:hover { background:var(--bg); }
+  #menu .danger { color:#e5484d; }
+  #menu .label { font-size:12px; color:var(--muted); padding:6px 10px 2px; }
+  #menu hr { border:none; border-top:1px solid var(--line); margin:4px 0; }
+  @media (max-width:760px) { #side { position:fixed; top:0; bottom:0; left:0; z-index:5; box-shadow:0 0 40px rgba(0,0,0,.3); } }
   header { display:flex; align-items:center; gap:12px; padding:12px 20px; border-bottom:1px solid var(--line); }
   header h1 { font-size:18px; margin:0; flex:1; letter-spacing:.02em; }
+  #sideBtn { border:none; background:none; font-size:18px; padding:2px 6px; }
   header h1 span { color:var(--accent); }
   button { font:inherit; font-size:14px; border:1px solid var(--line); background:var(--panel); color:var(--text); border-radius:8px; padding:6px 12px; cursor:pointer; }
   button:hover { border-color:var(--muted); }
@@ -65,10 +92,19 @@
 </style>
 </head>
 <body>
+<aside id="side">
+  <div class="side-top">
+    <button id="newBtn">+ New chat</button>
+    <button id="folderBtn" title="New folder">+ Folder</button>
+  </div>
+  <div class="side-list" id="sideList"></div>
+</aside>
+<div id="menu"></div>
+<div class="main">
 <header>
+  <button id="sideBtn" title="Show or hide chats" aria-label="Show or hide chats">☰</button>
   <h1>Ornate<span>.</span></h1>
   <button id="memBtn">Memory</button>
-  <button id="newBtn">New chat</button>
 </header>
 <div class="overlay" id="memOverlay">
   <div class="modal" role="dialog" aria-label="Memory">
@@ -85,6 +121,7 @@
     <button id="send" type="submit">Send</button>
   </div>
 </form>
+</div>
 <script>
 const log = document.getElementById("log"), box = document.getElementById("box"),
       send = document.getElementById("send"), chat = document.getElementById("chat");
@@ -225,7 +262,7 @@ async function run(text, edit = null) {
   const bubble = add("bot typing", "thinking…");
   let answer = "";
   try {
-    const r = await fetch("/chat", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ message: text, edit }) });
+    const r = await fetch("/chat", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ message: text, chat_id: activeId, edit }) });
     // read the reply piece by piece; each line is one JSON event from the server
     const reader = r.body.getReader(), decoder = new TextDecoder();
     let buffer = "";
@@ -238,7 +275,11 @@ async function run(text, edit = null) {
       for (const line of lines) {
         if (!line.trim()) continue;
         const ev = JSON.parse(line);
-        if (ev.type === "text") {
+        if (ev.type === "chat") {
+          // the server says which saved chat this is (a new chat gets its id here)
+          activeId = ev.id;
+          loadSidebar();
+        } else if (ev.type === "text") {
           answer += ev.text;
           bubble.className = "msg bot";
           bubble.innerHTML = render(answer);
@@ -266,6 +307,7 @@ async function run(text, edit = null) {
     bubble.textContent = "Couldn't reach the server. Is uvicorn running?";
   }
   busy = false; box.focus();
+  loadSidebar();   // this chat just moved to the top
   if (queue.length) { const next = queue.shift(); renderQueue(); run(next); }
 }
 
@@ -273,12 +315,193 @@ document.getElementById("form").addEventListener("submit", sendMessage);
 // Enter sends, Shift+Enter makes a new line
 box.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) sendMessage(e); });
 
-document.getElementById("newBtn").onclick = async () => {
-  if (busy) return;   // wait for the current answer before clearing
+// ---------- sidebar: saved chats, folders, pins ----------
+let activeId = null;   // the saved chat on screen; null = a new chat that hasn't been sent yet
+const sideList = document.getElementById("sideList"), menu = document.getElementById("menu");
+const WELCOME = '<div class="welcome"><h2>Welcome to Ornate</h2><p>Runs locally on this Mac. Ask anything.</p></div>';
+const narrow = () => window.innerWidth <= 760;
+
+// which folders are folded shut; remembered in this browser only (fine if it's lost)
+let collapsed = {};
+try { collapsed = JSON.parse(localStorage.getItem("ornate-collapsed") || "{}"); } catch {}
+const saveCollapsed = () => { try { localStorage.setItem("ornate-collapsed", JSON.stringify(collapsed)); } catch {} };
+
+async function api(method, url, body) {
+  const r = await fetch(url, { method, headers: {"Content-Type":"application/json"}, body: body && JSON.stringify(body) });
+  return r.json();
+}
+const patchChat = (id, body) => api("PATCH", "/chats/" + id, body);
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;   // textContent, never innerHTML: titles are user text
+  return e;
+}
+
+async function loadSidebar() {
+  const { chats, folders } = await api("GET", "/chats");
+  sideList.innerHTML = "";
+  const pinned = chats.filter(c => c.pinned);
+  if (pinned.length) {
+    sideList.appendChild(el("div", "side-label", "Pinned"));
+    pinned.forEach(c => sideList.appendChild(chatRow(c, folders)));
+  }
+  if (folders.length) sideList.appendChild(el("div", "side-label", "Folders"));
+  folders.forEach(f => {
+    const inside = chats.filter(c => !c.pinned && c.folder === f);   // pinned chats show only under Pinned
+    sideList.appendChild(folderRow(f, inside.length));
+    if (!collapsed[f]) {
+      const box = el("div", "folder-chats");
+      inside.forEach(c => box.appendChild(chatRow(c, folders)));
+      if (!inside.length) box.appendChild(el("div", "side-empty", "Empty"));
+      sideList.appendChild(box);
+    }
+  });
+  const rest = chats.filter(c => !c.pinned && !folders.includes(c.folder));
+  sideList.appendChild(el("div", "side-label", "Chats"));
+  if (!rest.length) sideList.appendChild(el("div", "side-empty", "No chats yet"));
+  rest.forEach(c => sideList.appendChild(chatRow(c, folders)));
+}
+
+function chatRow(c, folders) {
+  const row = el("div", "row" + (c.id === activeId ? " active" : ""));
+  const name = el("span", "name", c.title);
+  const more = el("button", "more", "⋯");
+  more.title = "More";
+  row.append(name, more);
+  row.onclick = () => openChat(c.id);
+  more.onclick = e => {
+    e.stopPropagation();   // open the menu, not the chat
+    const items = [
+      { label: c.pinned ? "Unpin" : "Pin", fn: () => patchChat(c.id, { pinned: !c.pinned }) },
+      { label: "Rename", fn: async () => { const t = await inlineInput(row, name, c.title); if (t) await patchChat(c.id, { title: t }); } },
+      "-", { heading: "Move to folder" },
+      ...folders.filter(f => f !== c.folder).map(f => ({ label: f, fn: () => patchChat(c.id, { folder: f }) })),
+      { label: "+ New folder…", fn: async () => {
+          const n = await newFolderInput();
+          if (n) { await api("POST", "/folders", { name: n }); await patchChat(c.id, { folder: n }); }
+      } },
+    ];
+    if (c.folder) items.push({ label: "Remove from folder", fn: () => patchChat(c.id, { folder: "" }) });
+    items.push("-", { label: "Delete", cls: "danger", fn: () => deleteChat(c) });
+    showMenu(more, items);
+  };
+  return row;
+}
+
+function folderRow(f, count) {
+  const row = el("div", "row");
+  const name = el("span", "name", f);
+  const more = el("button", "more", "⋯");
+  row.append(el("span", "arrow", collapsed[f] ? "▸" : "▾"), name, el("span", "count", count || ""), more);
+  row.onclick = () => { collapsed[f] = !collapsed[f]; saveCollapsed(); loadSidebar(); };
+  more.onclick = e => {
+    e.stopPropagation();
+    showMenu(more, [
+      { label: "Rename", fn: async () => {
+          const n = await inlineInput(row, name, f);
+          if (n && n !== f) {
+            await api("PATCH", "/folders/" + encodeURIComponent(f), { name: n });
+            if (collapsed[f]) { collapsed[n] = true; delete collapsed[f]; saveCollapsed(); }
+          }
+      } },
+      { label: "Delete folder (keeps its chats)", cls: "danger", fn: () => api("DELETE", "/folders/" + encodeURIComponent(f)) },
+    ]);
+  };
+  return row;
+}
+
+// swap a row's name for a text box; resolves with the typed text (Enter or clicking away) or null (Escape)
+function inlineInput(row, nameEl, value) {
+  return new Promise(resolve => {
+    const input = el("input");
+    input.value = value;
+    nameEl.replaceWith(input);
+    row.onclick = null;   // typing in the box shouldn't open the chat or fold the folder
+    input.focus(); input.select();
+    let done = false;
+    const finish = v => { if (done) return; done = true; resolve(v && v.trim() ? v.trim() : null); };
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") finish(input.value);
+      if (e.key === "Escape") { e.stopPropagation(); finish(null); }
+    });
+    input.addEventListener("blur", () => finish(input.value));
+  });
+}
+
+// an empty row at the top of the folders area to type a new folder's name into
+function newFolderInput() {
+  const row = el("div", "row"), name = el("span", "name");
+  row.append(el("span", "arrow", "▾"), name);
+  sideList.prepend(row);
+  return inlineInput(row, name, "");
+}
+
+function showMenu(anchor, items) {
+  menu.innerHTML = "";
+  for (const it of items) {
+    if (it === "-") menu.appendChild(el("hr"));
+    else if (it.heading) menu.appendChild(el("div", "label", it.heading));
+    else {
+      const b = el("button", it.cls || "", it.label);
+      // every action changes something on disk, so redraw the sidebar after it
+      b.onclick = async () => { closeMenu(); await it.fn(); loadSidebar(); };
+      menu.appendChild(b);
+    }
+  }
+  menu.classList.add("open");
+  // put it under the ⋯ button, or above it if it would fall off the bottom of the window
+  const r = anchor.getBoundingClientRect();
+  menu.style.left = Math.min(r.left, window.innerWidth - menu.offsetWidth - 8) + "px";
+  const below = r.bottom + 4;
+  menu.style.top = (below + menu.offsetHeight > window.innerHeight ? r.top - menu.offsetHeight - 4 : below) + "px";
+}
+const closeMenu = () => menu.classList.remove("open");
+document.addEventListener("click", e => { if (!menu.contains(e.target)) closeMenu(); });
+
+async function openChat(id) {
+  if (busy || id === activeId) return;   // don't switch chats while an answer is being written
+  const c = await api("GET", "/chats/" + id);
+  activeId = id;
   queue.length = 0; renderQueue();
-  await fetch("/reset", { method:"POST" });
-  log.innerHTML = '<div class="welcome"><h2>Welcome to Ornate</h2><p>Runs locally on this Mac. Ask anything.</p></div>';
+  log.innerHTML = "";
+  // redraw each turn the way it looked: your message with Edit, the answer with Copy
+  for (const t of c.turns) {
+    addEditButton(add("me", render(t.user)), t.user);
+    const b = add("bot", t.bot ? render(t.bot) : "(no reply)");
+    if (t.bot) addCopyButton(b, t.bot);
+  }
+  if (narrow()) document.body.classList.add("side-hidden");
+  loadSidebar();
+}
+
+function newChat() {
+  if (busy) return;   // wait for the current answer first
+  activeId = null;   // the server makes the chat when its first message is sent, so empty chats are never saved
+  queue.length = 0; renderQueue();
+  log.innerHTML = WELCOME;
+  if (narrow()) document.body.classList.add("side-hidden");
+  loadSidebar();
+  box.focus();
+}
+
+async function deleteChat(c) {
+  if (busy) return;
+  if (!confirm(`Delete "${c.title}"? This can't be undone.`)) return;
+  await api("DELETE", "/chats/" + c.id);
+  if (c.id === activeId) newChat();
+}
+
+document.getElementById("newBtn").onclick = newChat;
+document.getElementById("folderBtn").onclick = async () => {
+  const n = await newFolderInput();
+  if (n) await api("POST", "/folders", { name: n });
+  loadSidebar();
 };
+document.getElementById("sideBtn").onclick = () => document.body.classList.toggle("side-hidden");
+if (narrow()) document.body.classList.add("side-hidden");
+loadSidebar();
 
 // memory popup: a scrollable list, with a delete button on each fact
 const overlay = document.getElementById("memOverlay"), memList = document.getElementById("memList"),
@@ -307,7 +530,7 @@ document.getElementById("memBtn").onclick = () => { overlay.classList.add("open"
 const closeMem = () => overlay.classList.remove("open");
 document.getElementById("memClose").onclick = closeMem;
 overlay.onclick = e => { if (e.target === overlay) closeMem(); };   // click outside to close
-document.addEventListener("keydown", e => { if (e.key === "Escape") closeMem(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { closeMem(); closeMenu(); } });
 </script>
 </body>
 </html>

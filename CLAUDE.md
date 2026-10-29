@@ -28,7 +28,7 @@ python eval_hard.py / eval_skill.py # math and missed-question evals
 - `harness.py`: model loading, `ask_model` (streaming, optional `emit` for the web), `respond` (agent loop, up to 5 tool rounds, optional `check` retry), `find_tool_call` (also accepts a bare `name {json}` call), `add_tool` registry, `run_python`.
 - `assistant.py`: tools (`load_skill`, `start_quiz`, `web_search`, `remember`, `forget`), skill menu, system prompt, memory rules (`is_save_request`, `is_delete_request`, `add_memory_hint`, `clear_memory_hints`, `check_missed_save`, `handle_delete_reply`).
 - `memory.py`: facts in `memory.json` (git-ignored, personal, never commit it).
-- `agent.py`: terminal chat and slash commands. `server.py` + `static/index.html`: FastAPI web app (NDJSON streaming, lock, queue, memory popup, copy, edit a sent message). `quiz.py`, `files.py`, `skills/`, `styles/`.
+- `agent.py`: terminal chat and slash commands. `server.py` + `static/index.html`: FastAPI web app (NDJSON streaming, lock, queue, memory popup, copy, edit a sent message, sidebar). `chats.py`: saved chats as JSON files in `chats/` (git-ignored, personal), folders in `chats/folders.json`. `quiz.py`, `files.py`, `skills/`, `styles/`.
 - `tokenizer.py`, `data.py`, `bigram.py`, `gpt.py`: the tiny GPT from the start of the project.
 - `EVALS.md`: every eval with numbers and findings. `results/`: saved transcripts.
 
@@ -47,10 +47,10 @@ python eval_hard.py / eval_skill.py # math and missed-question evals
 - Evals rerun 2026-10-28: routing 30/30, memory 12/13 (model alone and with code check). `forget` now refuses unless the user's message asks to delete (`is_delete_request`), and the forget rule was removed from the prompt because it made "what do you know about me?" call forget. Remaining memory miss: "forget that i play basketball" deletes "Plays soccer." (stopped only by the "are you sure").
 - Multi-turn behavior isn't covered by any eval (all routing tests are single messages).
 - The web page used to show "(no reply)" when the model wrote its answer inside a thinking block it never closed (seen after the missed-question skill). `ask_model` now sends that text to the page, like the terminal does.
-- `run_python` is not sandboxed. LaTeX math shows raw in the web app. One conversation at a time, no saved chats.
+- `run_python` is not sandboxed. LaTeX math shows raw in the web app. Saved chats: the model still sees one chat at a time (switching loads it from disk); a chat's title is its first message, cut to 40 letters.
 - The 30B MoE beat a dense 32B (same or better scores, ~8x faster), so Ornate stays on the 30B.
 
 ## Next up
 
-1. Web app: sidebar with saved chats, then a design pass (blue accent, LaTeX rendering, drag-and-drop files).
+1. Web app: design pass (blue accent, LaTeX rendering, drag-and-drop files).
 2. Then: vision, RAG over class notes, multi-language code runner with a sandbox, fine-tuning with before/after evals, Windows port (RTX 4070, 8 GB VRAM).

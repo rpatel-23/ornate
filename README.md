@@ -44,7 +44,7 @@ All on the 30B-A3B model unless noted. Each set is small, so a gap of one or two
 | **Skills** | Instruction files the model loads on its own when a request matches (mistake analysis, quizzes) |
 | **Adaptive thinking** | Off for quick decisions, on after a skill or search, when the hard reasoning starts |
 | **Memory** | Saves and deletes only when asked, and deletes only after a "yes" in the chat |
-| **Web app** | Streaming answers, tool status, message queue, memory panel, copy buttons, message editing |
+| **Web app** | Streaming answers, tool status, message queue, memory panel, copy buttons, message editing, saved chats with folders and pins |
 | **Evals** | Math, routing, skills, memory, and model comparisons, with saved transcripts |
 
 ## Quick start
@@ -118,7 +118,7 @@ flowchart LR
 - **Skills** (`skills/`). Markdown files listed in the prompt with one line each. The model loads the full file when a request matches, and the harness removes it after the answer so it doesn't leak into later messages.
 - **Quizzes** (`quiz.py`). The model writes the questions as JSON once; Python runs the quiz and keeps score.
 - **Memory** (`memory.py`). Facts are stored in `memory.json` and added to every prompt. Code checks the user's message before any save, and deletes only after a "yes".
-- **Web app** (`server.py`, `static/index.html`). A FastAPI server streams each piece of the answer to the page as JSON, with tool events. A lock queues requests, since one model writes one answer at a time. The page is one file with no outside libraries.
+- **Web app** (`server.py`, `static/index.html`). A FastAPI server streams each piece of the answer to the page as JSON, with tool events. A lock queues requests, since one model writes one answer at a time. Chats are saved as JSON files on the Mac (`chats.py`), and a sidebar lists them with pins and folders. The page is one file with no outside libraries.
 - **Tiny GPT** (`gpt.py`). Before using a real model, I wrote a character-level transformer and trained it on Shakespeare to understand what is inside one: 816,705 parameters, validation loss 1.62 against 4.17 for random guessing.
 
 ## Tests
@@ -139,7 +139,7 @@ Results are saved to `results/` with full transcripts.
 - The test sets are small (9 to 50 items), and I wrote both the tests and the prompts. Gaps of one or two are noise.
 - `run_python` runs model-written code on the machine without a sandbox.
 - Web search uses an unofficial package and only sees short snippets.
-- The web app keeps one conversation at a time, and math written in LaTeX shows as raw text.
+- Math written in LaTeX shows as raw text in the web app.
 - Nothing is fine-tuned. The models are stock Qwen3 weights from [mlx-community](https://huggingface.co/mlx-community).
 - Memories stay in `memory.json` on your machine, which is git-ignored.
 
@@ -149,7 +149,8 @@ Results are saved to `results/` with full transcripts.
 - [x] Agent loop, tools, skills, and evals
 - [x] Memory
 - [x] Web app with streaming
-- [ ] Saved chats and a design pass
+- [x] Saved chats with folders and pins
+- [ ] Web app design pass
 - [ ] Reading photos of worksheets (vision)
 - [ ] Search over class notes (RAG)
 - [ ] Running code in more languages, in a sandbox
