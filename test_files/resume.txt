@@ -1,0 +1,25 @@
+Alex Doe
+alex.doe@example.com | Springfield, IL
+
+EDUCATION
+Springfield High School, Class of 2028. GPA 3.9 (unweighted)
+SAT: 1480 (Math 760, Reading and Writing 720)
+AP Scores: AP Calculus AB 5, AP Biology 4, AP World History 4
+
+EXPERIENCE
+Math Tutor, Springfield Library (2025 to present)
+- Tutor 6 middle school students weekly in algebra and geometry
+- Built practice worksheets and reviewed missed problems with students
+
+Intern, City Parks Department (Summer 2025)
+- Mapped 40 trail markers with GPS and updated the public map
+
+PROJECTS
+Weather Station: Raspberry Pi station that logs temperature and humidity to a website
+Study Bot: a Python chatbot that quizzes classmates on vocabulary
+
+SKILLS
+Python, JavaScript, Excel, Spanish (conversational)
+
+AWARDS
+AMC 10 Honor Roll (2025), Science Olympiad regional 2nd place (Anatomy)

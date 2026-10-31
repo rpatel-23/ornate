@@ -267,6 +267,45 @@ Where they differed:
 
 Ornate keeps the 30B-A3B: same or better accuracy, at a speed that works for chat.
 
+## 8. Base model vs Ornate, a retry note for crashed code, and files
+
+All on the 30B-A3B, thinking off, run 2026-10-30.
+
+### Same model, with and without the harness
+
+`eval_hard.py --problems problems_holdout.json`, the 45 problems the prompt was never tuned on. "No tools" gives the model only "You are Ornate, a helpful assistant." and no tools: essentially the stock model.
+
+| | Held-out math |
+|---|---|
+| Qwen3 30B-A3B, no tools | 34/45 |
+| Ornate (same model, reasoning prompt and Python tool) | 44/45 |
+
+The one miss with tools is a sample standard deviation: the code ran, but used the wrong formula (79.28 instead of 9.09). This set scored 45/45 in section 3; code has changed since then, and one problem is within noise.
+
+### A note when Python crashes
+
+In the web app, "solve 2x^2+3x+2=" ran `math.sqrt` on a negative discriminant. The code crashed, and the model wrote "Let's calculate the complex solutions" and stopped. `run_python` now adds "(The code raised an error. Fix the code and call run_python again.)" whenever the code exits with an error (decided by Python's exit code, not by the model's words), and turns off Python 3.14's color codes, which reached the model as junk like `[35m`. Replaying that chat, the model then retried with `cmath`.
+
+| Python tool | Before | After |
+|---|---|---|
+| Held-out, 45 | 44/45 | 44/45 |
+| Hard, 50 | 50/50 | 50/50 |
+
+The same 3 problems crashed in both runs, and the model recovered on all of them even without the note. So these sets can't show a gain: the note fixes the case that was seen and costs nothing here.
+
+### Routing with a file attached
+
+"summarize this pdf" with a resume attached loaded the missed-question skill in the web app. No routing test had a file, so `routing_file_tests.json` adds 17 messages with made-up files in `test_files/` (resume, notes, article, essay, cover letter, scores, practice test), written before any fix. `eval_routing.py --tests routing_file_tests.json` attaches each file the same way the web app does.
+
+The fix is a code gate, like the one on `remember`: missed-question loads only when the user's typed words say they missed a question ("I put", "I answered", "marked wrong", "the key says"...). The attached file never counts. When it refuses, the model is told to answer directly. No prompt change.
+
+| | Model alone | With code check |
+|---|---|---|
+| With a file, 17 messages | 13/17 | 15/17 |
+| Original routing test, 30 messages | 30/30 | 30/30 |
+
+Fixed: "make me a study guide from these notes" and "explain number 2 to me" (with the practice test) both loaded missed-question; with the gate the model answered directly. All three real missed questions with a file still loaded the skill. Still failing: "summarize this article in 3 bullet points" and "fix the grammar in my essay" called `run_python`. That is a different problem and is not fixed yet.
+
 ## Caveats
 
 - 45 to 50 problems per set. A gap of one or two questions is noise.

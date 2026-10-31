@@ -3,6 +3,7 @@ import re
 src = open("assistant.py").read()
 exec(src[src.index("SAVE_REQUEST = "):src.index("last_user_text = ")])
 exec(src[src.index("CLAIMS_SAVE = "):src.index("def called_remember")])
+exec(src[src.index("MISSED_QUESTION = "):src.index("# replies that claim a save")])
 
 # is the user's message an explicit request to save something?
 CASES = {
@@ -69,3 +70,30 @@ for text, want in DELETES.items():
         dfails += 1
         print(f"FAIL wanted {want}, got {got}: {text}")
 print(f"{len(DELETES) - dfails}/{len(DELETES)} delete-request checks passed")
+
+# does the user's typed message say they missed a question? (missed-question refuses to load otherwise)
+MISSED = {
+    "If 5x + 3 = 28, what is 10x? I put 5.": True,
+    "I got this wrong on my practice test: a 15% tip on a $40 meal. I said $4. Why is that wrong?": True,
+    "my teacher marked my answer of 81 wrong for 3 to the power of 3. what did I mess up?": True,
+    "Which amendment protects free speech? I answered the 2nd and it said incorrect.": True,
+    "The mean of 4, 8, and 12 is what? I wrote 24 but the answer key says 8.": True,
+    "I got number 3 wrong on this, I put A. why?": True,
+    "i put 3 for question 1 and it was wrong": True,
+    "my answer for #4 was 6 but the key says 3, what did i do wrong": True,
+    # not reports of a miss: the skill must not load (a file attached to these never counts)
+    "summarize this pdf": False,
+    "summarize this": False,
+    "what's this document about?": False,
+    "explain number 2 to me": False,
+    "quiz me on these notes": False,
+    "make me a study guide from these notes": False,
+    "what does the mitochondria do?": False,
+}
+mfails = 0
+for text, want in MISSED.items():
+    got = is_missed_question(text)
+    if got != want:
+        mfails += 1
+        print(f"FAIL wanted {want}, got {got}: {text}")
+print(f"{len(MISSED) - mfails}/{len(MISSED)} missed-question checks passed")

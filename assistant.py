@@ -11,7 +11,13 @@ from quiz import run_quiz
 # ---- tools the model can call on its own ----
 
 def load_skill(args):
-    return read_file(f"skills/{args['name']}.md")
+    name = args["name"]
+    # code gate: missed-question loads only when the user's typed words say they missed a question.
+    # Only the typed text counts, never an attached file, so a resume or a worksheet can't trigger it.
+    if name == "missed-question" and not is_missed_question(last_user_text):
+        return ("Not loaded: the user's message does not say they got a question wrong or what they answered, "
+                "so this skill does not apply. Answer their message directly.")
+    return read_file(f"skills/{name}.md")
 
 def start_quiz(args):
     return run_quiz(args["topic"], int(args.get("count", 5))) or "The quiz could not be created."
@@ -213,6 +219,13 @@ def add_memory_hint(text, attached=""):
     last_user_text = text
     text = text + handle_delete_reply(text) + attached   # a yes/no to a pending delete is settled in code first
     return text + HINT if is_save_request(last_user_text) else text
+
+# the user says they missed a question: "I put 5", "I answered the 2nd", "marked wrong", "the key says 8"...
+# It can only block the skill, never force it, so a false match ("I put my phone in rice") changes nothing.
+MISSED_QUESTION = re.compile(
+    r"\b(i (put|got|said|wrote|answered|chose|picked|guessed|did|had)|my answer|answered|marked|wrong|incorrect|missed|mistake|(answer )?key says)\b",
+    re.I)
+def is_missed_question(text): return bool(MISSED_QUESTION.search(text))
 
 # replies that claim a save ("Remembered.", "I've saved that..."). Used only to catch a false claim, never to save.
 CLAIMS_SAVE = re.compile(

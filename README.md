@@ -29,9 +29,10 @@ All on the 30B-A3B model unless noted. Each set is small, so a gap of one or two
 | Eval | Result |
 |---|---|
 | Math, 50 hard problems | **50/50** with the Python tool, 48/50 without |
-| Math, 45 problems the prompt never saw | **45/45** with the reasoning prompt, 44/45 with the original |
+| Math, 45 problems the prompt never saw | **44/45** for Ornate, 34/45 for the same model with no tools or prompt |
 | Naming the exact mistake behind a wrong answer, 9 problems | **8/9** with thinking, 6/9 without |
 | Picking the right first move, 30 messages | **30/30** |
+| Picking the right first move with a file attached, 17 messages | **15/17** with the code check, 13/17 without |
 | Saving and forgetting on a fake memory list, 13 messages | **12/13** |
 | 30B mixture-of-experts vs 32B dense | about **8× faster**, same or better scores |
 

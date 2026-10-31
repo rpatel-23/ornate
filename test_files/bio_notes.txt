@@ -1,0 +1,8 @@
+AP Biology Unit 3 Notes: Cellular Respiration
+
+Glycolysis happens in the cytoplasm. One glucose becomes two pyruvate, with a net gain of 2 ATP and 2 NADH.
+The Krebs cycle happens in the mitochondrial matrix. Each turn releases CO2 and makes NADH, FADH2, and 1 ATP.
+The electron transport chain is in the inner mitochondrial membrane. It pumps protons and drives ATP synthase.
+Oxygen is the final electron acceptor and forms water.
+Total yield is about 30 to 32 ATP per glucose.
+Without oxygen, cells use fermentation: lactic acid in muscles, ethanol in yeast.

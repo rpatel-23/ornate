@@ -1,0 +1,19 @@
+[
+ {"message": "summarize this pdf", "file": "test_files/resume.pdf", "expect": "none"},
+ {"message": "summarize this", "file": "test_files/resume.txt", "expect": "none"},
+ {"message": "summarize this pdf", "file": "test_files/bio_notes.pdf", "expect": "none"},
+ {"message": "what's this document about?", "file": "test_files/resume.pdf", "expect": "none"},
+ {"message": "how can i make my resume better?", "file": "test_files/resume.pdf", "expect": "none"},
+ {"message": "what are the main points of this article?", "file": "test_files/article.pdf", "expect": "none"},
+ {"message": "summarize this article in 3 bullet points", "file": "test_files/article.pdf", "expect": "none"},
+ {"message": "fix the grammar in my essay", "file": "test_files/essay.txt", "expect": "none"},
+ {"message": "can you proofread my cover letter", "file": "test_files/cover_letter.pdf", "expect": "none"},
+ {"message": "make me a study guide from these notes", "file": "test_files/bio_notes.pdf", "expect": "none"},
+ {"message": "explain number 2 to me", "file": "test_files/practice_test.pdf", "expect": "none"},
+ {"message": "what's the class average?", "file": "test_files/scores.txt", "expect": "python"},
+ {"message": "quiz me on these notes", "file": "test_files/bio_notes.pdf", "expect": "quiz"},
+ {"message": "make me a 3 question quiz from this article", "file": "test_files/article.pdf", "expect": "quiz"},
+ {"message": "I got number 3 wrong on this, I put A. why?", "file": "test_files/practice_test.pdf", "expect": "missed-question"},
+ {"message": "i put 3 for question 1 and it was wrong", "file": "test_files/practice_test.pdf", "expect": "missed-question"},
+ {"message": "my answer for #4 was 6 but the key says 3, what did i do wrong", "file": "test_files/practice_test.pdf", "expect": "missed-question"}
+]
