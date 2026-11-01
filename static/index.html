@@ -95,10 +95,15 @@
   body.empty #chat { flex:0 0 auto; overflow:visible; padding-top:22vh; }
   body.empty .welcome { margin:0; }
   body.empty form { border-top:none; margin-bottom:auto; }
-  #starters { display:none; max-width:760px; margin:12px auto 0; flex-wrap:wrap; gap:8px; justify-content:center; }
-  body.empty #starters { display:flex; }
-  #starters button { border-radius:999px; color:var(--muted); font-size:13px; padding:6px 14px; }
-  #starters button:hover { color:var(--text); border-color:var(--accent); }
+  /* starter cards: a line icon, a title, and what it does, in a row under the box (2 across on narrow screens) */
+  #starters { display:none; max-width:760px; margin:18px auto 0; grid-template-columns:repeat(4, 1fr); gap:10px; }
+  body.empty #starters { display:grid; }
+  @media (max-width:700px) { #starters { grid-template-columns:repeat(2, 1fr); } }
+  #starters button { display:flex; flex-direction:column; align-items:flex-start; gap:3px; text-align:left; padding:12px 14px; border-radius:12px; background:none; transition:background .15s, border-color .15s; }
+  #starters button:hover { background:var(--panel); border-color:var(--accent); }
+  #starters svg { width:18px; height:18px; color:var(--accent); margin-bottom:6px; }
+  #starters .t { font-size:14px; font-weight:600; color:var(--text); }
+  #starters .d { font-size:12.5px; color:var(--muted); line-height:1.35; }
   .typing { color:var(--muted); font-style:italic; }
   .overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; padding:16px; z-index:10; }
   .overlay.open { display:flex; }
@@ -508,16 +513,17 @@ box.addEventListener("input", fitBox);
 let activeId = null;   // the saved chat on screen; null = a new chat that hasn't been sent yet
 const sideList = document.getElementById("sideList"), menu = document.getElementById("menu");
 // starter ideas on a new chat; one per thing Ornate can do. Clicking fills the box (it doesn't send), so you can edit first.
-const STARTERS = [
-  ["🧮 Solve a math problem", "Solve x^2 - 5x + 6 = 0 and check the answer with Python."],
-  ["📝 Quiz me", "Quiz me on cell biology, 5 questions."],
-  ["🔎 Search the web", "What's the latest news in AI this week?"],
-  ["💻 Write some code", "Write a function that finds the most common word in a sentence and test it."],
+const STARTERS = [   // [icon, title, what it does, text it puts in the box]
+  ['<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg>', "Solve a problem", "Step by step, checked in Python", "Solve x^2 - 5x + 6 = 0 and check the answer with Python."],
+  ['<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l2 2 4-4"/><rect x="4" y="4" width="16" height="16" rx="3"/></svg>', "Quiz me", "Questions on any topic, scored", "Quiz me on cell biology, 5 questions."],
+  ['<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>', "Search the web", "Fresh answers with sources", "What's the latest news in AI this week?"],
+  ['<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg>', "Write code", "Written and run for you", "Write a function that finds the most common word in a sentence and test it."],
 ];
 const startersBox = document.getElementById("starters");
-STARTERS.forEach(([label, text]) => {
+STARTERS.forEach(([icon, title, about, text]) => {
   const b = document.createElement("button");
-  b.type = "button"; b.textContent = label;
+  b.type = "button";
+  b.innerHTML = icon + `<span class="t">${title}</span><span class="d">${about}</span>`;   // fixed text written here, not user input
   b.onclick = () => { box.value = text; fitBox(); box.focus(); };
   startersBox.appendChild(b);
 });
