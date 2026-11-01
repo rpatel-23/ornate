@@ -12,7 +12,7 @@
       "raw": "none",
       "correct": true,
       "raw_correct": true,
-      "reply": "I cannot summarize the PDF directly. However, based on the text provided, here's a summary:\n\nAlex Doe is a high school student from Springfield, IL, with a 3.9 GPA and an SAT score of 1480. They have experience as a math tutor and an intern with the City Parks Department. Alex has completed projects such as a weather station and a vocabulary quiz chatbot. They are skilled in Python, JavaScript, Excel, and conversational Spanish. Alex has received awards such as the AMC 10 Honor Roll and a regional placement in Science Olympiad."
+      "reply": "The PDF is a resume for Alex Doe, including the following details:\n\n- **Contact Information**: Email: alex.doe@example.com, Location: Springfield, IL.\n- **Education**: Graduated from Springfield High School in 2028 with a GPA of 3.9. SAT score: 1480 (Math: 760, Reading and Writing: 720). AP scores: Calculus AB (5), Biology (4), World History (4).\n- **Experience**: \n  - Math Tutor at Springfield Library (2025 to present), tutoring 6 middle school students weekly in algebra and geometry.\n  - Intern at City Parks Department (Summer 2025), mapping 40 trail markers with GPS and updating the public map.\n- **Projects**: \n  - Weather Station: A Raspberry Pi station that logs temperature and humidity to a website.\n  - Study Bot: A Python chatbot that quizzes classmates on vocabulary.\n- **Skills**: Python, JavaScript, Excel, and conversational Spanish.\n- **Awards**: AMC 10 Honor Roll (2025), and 2nd place in Science Olympiad (Anatomy) at the regional level."
     },
     {
       "message": "summarize this",
@@ -22,7 +22,7 @@
       "raw": "none",
       "correct": true,
       "raw_correct": true,
-      "reply": "Alex Doe is a high school senior from Springfield, IL, with a 3.9 GPA and an SAT score of 1480. He has experience as a math tutor and an intern with the City Parks Department. Alex has created a weather station and a study bot, and he is skilled in Python, JavaScript, Excel, and Spanish. He has received awards for his performance in the AMC 10 and Science Olympiad."
+      "reply": "Alex Doe is a high school senior from Springfield, IL, with a 3.9 GPA and an SAT score of 1480. He has experience as a math tutor and an intern with the City Parks Department. Alex has developed a weather station using a Raspberry Pi and a study bot in Python. He is skilled in Python, JavaScript, Excel, and conversational Spanish. He has received awards such as the AMC 10 Honor Roll and a regional placement in Science Olympiad."
     },
     {
       "message": "summarize this pdf",
@@ -32,7 +32,7 @@
       "raw": "none",
       "correct": true,
       "raw_correct": true,
-      "reply": "The AP Biology Unit 3 Notes summarize the process of cellular respiration. Key points include:\n\n1. **Glycolysis**: Occurs in the cytoplasm, where one glucose molecule is broken down into two pyruvate molecules, yielding a net gain of 2 ATP and 2 NADH.\n2. **Krebs Cycle**: Takes place in the mitochondrial matrix. Each cycle produces CO2, NADH, FADH2, and 1 ATP.\n3. **Electron Transport Chain**: Located in the inner mitochondrial membrane. It pumps protons and drives ATP synthase, producing most of the ATP.\n4. **Oxygen's Role**: Acts as the final electron acceptor, forming water.\n5. **Total ATP Yield**: Approximately 30 to 32 ATP per glucose molecule.\n6. **Fermentation**: Occurs without oxygen, producing lactic acid in muscles and ethanol in yeast."
+      "reply": "The AP Biology Unit 3 Notes cover the process of cellular respiration. Key points include:\n\n1. **Glycolysis**: Occurs in the cytoplasm, where one glucose molecule is broken down into two pyruvate molecules, yielding a net gain of 2 ATP and 2 NADH.\n2. **Krebs Cycle**: Takes place in the mitochondrial matrix. Each cycle produces CO2, NADH, FADH2, and 1 ATP.\n3. **Electron Transport Chain**: Located in the inner mitochondrial membrane. It pumps protons and drives ATP synthase, producing most of the ATP.\n4. **Oxygen's Role**: Acts as the final electron acceptor, forming water.\n5. **Total ATP Yield**: Approximately 30 to 32 ATP per glucose molecule.\n6. **Fermentation**: Occurs without oxygen, producing lactic acid in muscles and ethanol in yeast."
     },
     {
       "message": "what's this document about?",
@@ -52,7 +52,7 @@
       "raw": "none",
       "correct": true,
       "raw_correct": true,
-      "reply": "To make your resume better, focus on the following areas:\n\n1. **Quantify achievements**: Add specific numbers or results where possible. For example, instead of saying \"Tutor 6 middle school students,\" say \"Tutored 6 middle school students, improving their grades by an average of 20%.\"\n\n2. **Use action verbs**: Start bullet points with strong action verbs like \"Tutored,\" \"Built,\" \"Mapped,\" \"Developed,\" etc.\n\n3. **Highlight relevant skills**: Tailor your skills to the job or opportunity you're applying for. For example, if applying for a tech role, emphasize Python and JavaScript more prominently.\n\n4. **Make it visually clean**: Ensure the formatting is consistent and easy to read. Avoid overcrowding sections with too much text.\n\n5. **Add a summary or objective**: Include a short summary at the top to highlight your key qualifications and goals.\n\n6. **Include more projects or leadership roles**: If applicable, add more details about your projects or any leadership roles you've held.\n\nWould you like help revising your resume? If so, I can guide you through the process."
+      "reply": "To make your resume better, focus on the following areas:\n\n1. **Quantify achievements**: Add specific numbers or outcomes where possible. For example, instead of saying \"Tutor 6 middle school students,\" say \"Tutored 6 middle school students, improving their grades by an average of 20%.\"\n\n2. **Use action verbs**: Start bullet points with strong action verbs like \"Tutored,\" \"Built,\" \"Mapped,\" \"Developed,\" etc.\n\n3. **Highlight relevant skills**: Tailor your skills to the job or opportunity you're applying for. For example, if applying for a tech role, emphasize Python, JavaScript, and any other technical skills.\n\n4. **Make it visually clean**: Ensure the formatting is consistent and easy to read. Avoid overcrowding sections with too much text.\n\n5. **Add a summary or objective**: A short summary at the top can help highlight your goals and qualifications.\n\nWould you like help rewriting or refining your resume?"
     },
     {
       "message": "what are the main points of this article?",
@@ -62,7 +62,7 @@
       "raw": "none",
       "correct": true,
       "raw_correct": true,
-      "reply": "The article discusses how cities are planting trees to combat rising summer heat. Key points include:\n\n1. Cities are planting thousands of street trees to reduce heat.\n2. Paved streets and roofs contribute to the urban heat island effect, making cities warmer than surrounding areas.\n3. Trees help cool streets by shading pavement and releasing water vapor.\n4. Studies show that blocks with more tree cover are significantly cooler.\n5. Trees also help with stormwater management, noise reduction, and stress relief.\n6. Tree planting programs face challenges, such as the need for watering and maintenance.\n7. Some neighborhoods with the least shade have fewer resources to maintain trees, so cities are partnering with local groups to help."
+      "reply": "The article discusses the following main points:\n\n1. Cities are planting trees to combat rising summer heat caused by the urban heat island effect, where paved surfaces and buildings absorb and retain heat.\n2. Trees help cool cities by shading pavement and releasing water vapor through their leaves.\n3. Studies show that areas with more tree cover can be up to 10 degrees Fahrenheit cooler on hot afternoons.\n4. Trees also help manage stormwater, reduce noise, and lower stress for residents.\n5. Tree planting programs face challenges, such as the need for watering and maintenance, especially in areas with fewer resources.\n6. To address this, cities are partnering with local groups to help water and protect young trees."
     },
     {
       "message": "summarize this article in 3 bullet points",
@@ -82,7 +82,7 @@
       "raw": "python",
       "correct": false,
       "raw_correct": false,
-      "reply": "<tool_call>\n{\"name\": \"run_python\", \"arguments\": {\"code\": \"text = \\\"The Importance of Sleep for Students\\\\n\\\\nMany students dont get enough sleep during the school year. Teenagers needs about 8 to 10 hours of sleep each night,\\\\nbut most only gets 6 or 7. This effect there grades, mood, and health. When students is tired, they have trouble focusing\\\\nin class and remembering what they learned.\\\\n\\\\nSchools could help by starting later in the morning. Some district that tried later start times seen better attendance\\\\nand test scores. Students can also help themselfs by putting there phones away an hour before bed.\\\"\\n\\n# Correcting grammar and punctuation\\nfixed_text = text.replace(\\\"dont\\\", \\\"don't\\\").replace(\\\"needs\\\", \\\"need\\\").replace(\\\"gets\\\", \\\"get\\\").replace(\\\"effect\\\", \\\"affect\\\").replace(\\\"there\\\", \\\"their\\\").replace(\\\"is\\\", \\\"are\\\").replace(\\\"themselfs\\\", \\\"themselves\\\").replace(\\\"there\\\", \\\"their\\\").replace(\\\"an\\\", \\\"and\\\")\\n\\nprint(fixed_text)\"}}\n</tool_call>"
+      "reply": "<tool_call>\n{\"name\": \"run_python\", \"arguments\": {\"code\": \"from grammar_check import grammar_check\\nresult = grammar_check(\\\"Many students dont get enough sleep during the school year. Teenagers needs about 8 to 10 hours of sleep each night, but most only gets 6 or 7. This effect there grades, mood, and health. When students is tired, they have trouble focusing in class and remembering what they learned. Schools could help by starting later in the morning. Some district that tried later start times seen better attendance and test scores. Students can also help themselfs by putting there phones away an hour before bed.\\\")\\nprint(result)\"}}\n</tool_call>"
     },
     {
       "message": "can you proofread my cover letter",
@@ -102,7 +102,7 @@
       "raw": "missed-question",
       "correct": true,
       "raw_correct": false,
-      "reply": "Here is a study guide based on your notes:\n\n**AP Biology Unit 3: Cellular Respiration**\n\n1. **Glycolysis**\n   - Location: Cytoplasm\n   - Process: One glucose molecule is broken down into two pyruvate molecules.\n   - Products: 2 ATP, 2 NADH\n   - Net gain: 2 ATP\n\n2. **Krebs Cycle (Citric Acid Cycle)**\n   - Location: Mitochondrial matrix\n   - Process: Each turn of the cycle processes one acetyl-CoA (from pyruvate).\n   - Products: CO2, NADH, FADH2, 1 ATP per cycle\n\n3. **Electron Transport Chain (ETC)**\n   - Location: Inner mitochondrial membrane\n   - Process: Electrons are passed through a series of proteins, creating a proton gradient.\n   - Function: Protons are pumped across the membrane, driving ATP synthase.\n   - Final electron acceptor: Oxygen\n   - Product: Water (H2O)\n\n4. **ATP Yield**\n   - Total: Approximately 30\u201332 ATP per glucose molecule\n\n5. **Fermentation (Anaerobic Respiration)**\n   - Occurs without oxygen.\n   - Lactic acid fermentation: Occurs in muscle cells (produces lactic acid).\n   - Ethanol fermentation: Occurs in yeast (produces ethanol and CO2)."
+      "reply": "Here is a study guide based on your notes:\n\n**AP Biology Unit 3: Cellular Respiration**\n\n1. **Glycolysis**\n   - Location: Cytoplasm\n   - Process: One glucose molecule is broken down into two pyruvate molecules.\n   - Products: 2 ATP, 2 NADH\n   - Net gain: 2 ATP\n\n2. **Krebs Cycle (Citric Acid Cycle)**\n   - Location: Mitochondrial matrix\n   - Process: Each turn of the cycle processes one acetyl-CoA (from pyruvate).\n   - Products: CO2, NADH, FADH2, 1 ATP per cycle\n\n3. **Electron Transport Chain (ETC)**\n   - Location: Inner mitochondrial membrane\n   - Process: Electrons are passed through a series of proteins, creating a proton gradient.\n   - Function: Protons are pumped across the membrane, driving ATP synthase.\n   - Final electron acceptor: Oxygen (forms water)\n\n4. **ATP Yield**\n   - Total: Approximately 30\u201332 ATP per glucose molecule\n\n5. **Fermentation (Anaerobic Respiration)**\n   - Occurs without oxygen.\n   - Lactic acid fermentation: Occurs in muscle cells (produces lactic acid).\n   - Ethanol fermentation: Occurs in yeast (produces ethanol and CO2)."
     },
     {
       "message": "explain number 2 to me",
@@ -112,7 +112,7 @@
       "raw": "missed-question",
       "correct": true,
       "raw_correct": false,
-      "reply": "The question is asking for the vertex of the quadratic equation $ y = (x - 2)^2 + 5 $. The vertex form of a quadratic equation is $ y = (x - h)^2 + k $, where $ (h, k) $ is the vertex.\n\nIn this case, $ h = 2 $ and $ k = 5 $, so the vertex is $ (2, 5) $. The correct answer is C."
+      "reply": "The question is asking for the vertex of the quadratic equation $ y = (x - 2)^2 + 5 $. The vertex form of a quadratic equation is $ y = (x - h)^2 + k $, where $ (h, k) $ is the vertex.\n\nIn this case, $ h = 2 $ and $ k = 5 $, so the vertex is $ (2, 5) $. The correct answer is C) (2, 5)."
     },
     {
       "message": "what's the class average?",

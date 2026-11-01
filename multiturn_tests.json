@@ -1,0 +1,62 @@
+{
+  "memory": ["Takes AP Stats.", "Takes AP Precalculus.", "Likes short answers.", "Plays soccer.", "SAT is on December 5."],
+  "tests": [
+    {"name": "forget, then yes",
+     "turns": [{"user": "forget that i take ap stats", "tool": "forget"},
+               {"user": "yes"}],
+     "memory_after": ["Takes AP Precalculus.", "Likes short answers.", "Plays soccer.", "SAT is on December 5."]},
+
+    {"name": "forget, then no",
+     "turns": [{"user": "forget that i play soccer", "tool": "forget"},
+               {"user": "no"}],
+     "memory_after": "unchanged"},
+
+    {"name": "forget, then an unrelated question",
+     "turns": [{"user": "forget my sat date", "tool": "forget"},
+               {"user": "what is 12 times 12?", "reply_has": ["144"]}],
+     "memory_after": "unchanged"},
+
+    {"name": "forget, unrelated question, then a late yes",
+     "turns": [{"user": "forget my sat date", "tool": "forget"},
+               {"user": "what is 2 + 2?"},
+               {"user": "yes"}],
+     "memory_after": "unchanged"},
+
+    {"name": "forget, yes, then ask about it",
+     "turns": [{"user": "forget my sat date", "tool": "forget"},
+               {"user": "yes"},
+               {"user": "when is my SAT?", "reply_not": ["december 5", "dec 5"]}],
+     "memory_after": ["Takes AP Stats.", "Takes AP Precalculus.", "Likes short answers.", "Plays soccer."]},
+
+    {"name": "change your mind about what to forget",
+     "turns": [{"user": "forget that i take ap precalculus", "tool": "forget"},
+               {"user": "wait no, forget that i play soccer instead", "tool": "forget"}],
+     "memory_after": "unchanged"},
+
+    {"name": "remember, then an unrelated question",
+     "turns": [{"user": "remember that my favorite subject is chemistry", "tool": "remember"},
+               {"user": "what is 9 squared?", "no_tool": ["remember"], "reply_has": ["81"]}],
+     "memory_after": "plus one about chemistry"},
+
+    {"name": "remember, then forget it",
+     "turns": [{"user": "remember that i like answers in bullet points", "tool": "remember"},
+               {"user": "actually forget that", "tool": "forget"},
+               {"user": "yes"}],
+     "memory_after": "unchanged"},
+
+    {"name": "no save without asking",
+     "turns": [{"user": "i really love chemistry class"},
+               {"user": "what do you remember about me?"}],
+     "memory_after": "unchanged"},
+
+    {"name": "a skill doesn't leak into the next message",
+     "turns": [{"user": "If 4x - 6 = 18, what is 2x + 1? I put 6.", "tool": "load_skill"},
+               {"user": "What is the capital of France?", "no_tool": ["load_skill"], "reply_has": ["paris"], "reply_not": ["slip"]}],
+     "memory_after": "unchanged"},
+
+    {"name": "a follow-up uses the earlier answer",
+     "turns": [{"user": "What is 15% of 80?"},
+               {"user": "now double that", "reply_has": ["24"]}],
+     "memory_after": "unchanged"}
+  ]
+}

@@ -5,7 +5,7 @@
   "python_tool": {
     "score": 44,
     "total": 45,
-    "seconds": 350,
+    "seconds": 327,
     "records": [
       {
         "question": "How many integers from 1 to 5000 are divisible by 3 or by 7, but not by 5?",

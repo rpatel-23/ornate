@@ -306,9 +306,194 @@ The fix is a code gate, like the one on `remember`: missed-question loads only w
 
 Fixed: "make me a study guide from these notes" and "explain number 2 to me" (with the practice test) both loaded missed-question; with the gate the model answered directly. All three real missed questions with a file still loaded the skill. Still failing: "summarize this article in 3 bullet points" and "fix the grammar in my essay" called `run_python`. That is a different problem and is not fixed yet.
 
+## 9. MATH-500, a newer model, and two specialist models
+
+Run 2026-10-30 to 10-31. "Current" is Qwen3-30B-A3B (Baroque). "2507" is Qwen3-30B-A3B-Instruct-2507, Qwen's newer version of the same model, with thinking split off into a separate model.
+
+### MATH-500
+
+[MATH-500](https://huggingface.co/datasets/HuggingFaceH4/MATH-500) is 500 competition problems from the MATH benchmark, levels 1 to 5, with answers in LaTeX. `eval_math500.py --mode tools` gives each problem to Ornate (the reasoning prompt and the Python tool) with "Put your final answer in \boxed{}." Replies were capped at 4,000 tokens, Ornate's limit at the time.
+
+`math_grader.py` takes the last `\boxed{}` and compares it to the key: first as cleaned-up text, then as math with sympy, so `\frac{1}{2}` matches `0.5` and `(b+2)(a+5)` matches `(a+5)(b+2)`. Before any model ran, it graded all 500 official solutions as correct and rejected a set of wrong answers.
+
+| Level | Current | 2507 |
+|---|---|---|
+| 1 | 42/43 | 42/43 |
+| 2 | 85/90 | 89/90 |
+| 3 | 96/105 | 99/105 |
+| 4 | 106/128 | 114/128 |
+| 5 | 73/134 | 96/134 |
+| **Total** | **402/500 (80.4%)** | **440/500 (88.0%)** |
+
+Most of the 2507's lead is on level 5. With 500 problems, one run has a margin of about ±2 points, so a 7-point gap is real; a 1 or 2 point gap would not be. The two runs overlapped and the Mac's battery ran down during the second one, so their times are not comparable.
+
+**Grader fixes.** Reading every FAIL turned up right answers marked wrong: a base subscript (`2516` for `2516_8`), units (`864` for `864 \mbox{ inches}^2`), `\cot x` written as `\frac{\cos x}{\sin x}`, vectors written with `\frac` or a factor in front, a mixed number (`15 \frac{39}{40}` for `\frac{639}{40}`), `12^{th}`, `x \in [-2,7]`, and multiple-choice letters with extra text. Each fix is a general rule, tested on wrong answers too, and the official solutions still grade 500/500. One of my rules first rejected `\text{C}` for `\text{(C)}`, which I caught because a right answer flipped to wrong. A `\pm` rule came later: `1 \pm \sqrt{19}` means the two answers `1+\sqrt{19}, 1-\sqrt{19}`. A separate Claude model, given only each problem, key, and answer, judged every flipped answer it saw, 22 different ones, correct except one: `-3.35889894354067, 5.35889894354067` for `1 \pm \sqrt{19}`, a decimal, not the exact roots. The grader had been accepting any number within 0.000001, so that answer passed. It now accepts that only when neither answer is a decimal, and this caught one more: `0.00199` for `\frac{2}{1005}`, which the first grader had marked right. Regrading the saved answers (no model calls) moved the current model from 388 to 402 and the 2507 from 429 to 440.
+
+**Where the misses come from.** 51 of the 2507's 60 misses never gave an answer: every one hit the 4,000-token limit while still working. The current model had 12 replies with no answer: 6 hit the limit (some repeating one line until they ran out), 5 used all 5 tool rounds, and 1 stopped early. The current model called Python on 241 problems, the 2507 on 179.
+
+**Harness bugs this run found:**
+
+- **A 9-hour freeze.** On problem 151 (`intermediate_algebra/964`), the model's code recursed until Python's limit, and the whole traceback went back into the conversation: 144,721 tokens, past the model's 131,072. The run sat on it all night until macOS killed the job. `run_python` now returns at most 2,000 characters, the start and the end (where errors are), with a note saying how much was cut. Rerun, the problem took under a minute (still wrong: 4 instead of 1).
+- **A missing closing tag.** The 2507 once wrote `<tool_call>` and its code, then stopped before `</tool_call>`, so the code never ran. That was its one miss on the hard set (LCM of 84, 126, 220). It happened once in about 800 saved tool calls. `find_tool_call` now accepts a call missing its closing tag at the very end of a reply.
+- **Lost progress.** A crash used to lose the whole run. Results are now saved after every problem.
+
+Both runs above used both harness fixes.
+
+### A bigger reply limit: 4,000 to 16,384 tokens
+
+Since most of the 2507's misses ran out of room, Ornate's default reply limit went to 16,384 tokens (Qwen's suggestion for this model). Generation always picks the most likely token, so a bigger limit can only change replies that hit the old one. `eval_math500.py --rerun-cut 4000` reruns just those, plus 5 that did not as a check. All 5 checks came back word for word the same.
+
+| | 4,000 tokens | 16,384 tokens |
+|---|---|---|
+| Current | 402/500 (80.4%) | 402/500 (80.4%) |
+| 2507 | 440/500 (88.0%) | **475/500 (95.0%)** |
+
+The 2507 got 35 more right and none fewer, mostly level 4 and 5 (by level: 42/43, 89/90, 104/105, 125/128, 115/134). Its long replies were real work that needed room; 6 still end without an answer. The current model's 6 long replies were loops, repeating the same lines, and more room did not help: the loop guard (below) stopped all 6, and in the 4,000-token run the same replies had repeated their endings 9 to 64 times. Most of the 2507 rerun ran before the loop guard existed and the current model's ran with it; since the guard only stopped replies that were already looping, it does not change either score.
+
+### The 2507 on the other evals
+
+First run before the output cap and the closing-tag fix; rerun on 10-31 with all of this section's harness changes, for both models.
+
+| Eval | Current | 2507, first run | 2507, rerun |
+|---|---|---|---|
+| Held-out math, 45 | 44/45 | 45/45 | 45/45 |
+| Hard math, 50 | 50/50 | 49/50 | 50/50 |
+| Routing, 30 | 30/30 | 29/30 | 29/30 |
+| File routing, 17: model alone / with code check | 13/17 / 15/17 | 14/17 / 16/17 | 14/17 / 16/17 |
+| Memory, 13 | 12/13 (see below) | 12/13 | 12/13 |
+
+The 2507's hard-math miss in the first run was the missing closing tag; with the fix it is 50/50. Its routing miss: "btw im taking AP Gov this year" calls `remember`, which the save gate refuses, since the message doesn't ask to save. Its file-routing miss is "fix the grammar in my essay" calling `run_python`, the same as the current model.
+
+The current model's rerun matched its old scores on every eval but memory, which fell to 10/13 (11/13 with the code check): "what do you remember about me?" called `remember` and "whats in your memory" called `forget` (the forget gate stopped it). Rerun with only the date in the prompt set back to October 28, it scored 12/13 again. So the date at the top of the prompt, not this section's harness changes, flips those two messages, like the forget bug in section 6. The gates keep either call from saving or deleting anything, but the first move is still wrong.
+
+### Thinking and code models in the picker
+
+Two more models joined the picker: **Mosaic** (Qwen3-30B-A3B-Thinking-2507), which always reasons before answering, and **Art Deco** (Qwen3-Coder-30B-A3B-Instruct), trained mostly on code. Each needed harness changes:
+
+- Mosaic's chat template writes the opening `<think>` into the prompt, so its reply only contains `</think>`. `ask_model` adds the opening tag back, so its thinking is hidden like every other model's. It gets a 32,768-token limit, Qwen's suggestion for it.
+- Art Deco writes tool calls as XML (`<function=run_python><parameter=code>...`), not JSON. `find_tool_call` reads both, and turns numbers and lists back into numbers and lists using each tool's spec.
+
+Mosaic has only a quick test so far (sum of the divisors of 360: 1170, using Python, in 25 s). Art Deco was measured.
+
+**Art Deco wrote the same function 24 times.** Asked in the web app to write a function and test it, it wrote the code, said "Let me run this code to see the results:", and pasted the same code as text instead of calling the tool, 23 times. To find the cause, I gave it the same first message with different parts of Ornate's prompt:
+
+| Prompt | Calls the tool? |
+|---|---|
+| Tool rules only | yes |
+| Tool rules + skills note | yes |
+| Tool rules + style | yes |
+| Tool rules + date + skills note | yes |
+| Tool rules + date | yes, but stopped before `</tool_call>` |
+| Tool rules + skills note + style | no, loops |
+| Tool rules + date + style | no, loops |
+| The full prompt (what the web app uses) | no, loops |
+
+No single part is the cause: small changes flip it either way. Since rewording would just be tuning to one example, I left the prompt alone and fixed what code can fix:
+
+- **A loop guard.** If the last 300 characters of an answer already appear twice before, code stops the answer and adds "(stopped: the answer started repeating itself)". On the 24-copy answer it stops at 2,400 characters instead of 22,934, and it never triggered on `EVALS.md` or `harness.py`.
+- **A repetition penalty of 1.05** for Art Deco, from its own `generation_config.json`. It still picks the top token, so answers stay repeatable. It did not break this loop.
+- **Tags that go missing.** The routing transcripts showed Art Deco calling the right tool but writing `<function=...>` with no `<tool_call>` around it (7 of its routing misses), so nothing ran. `find_tool_call` now accepts that too, and the page hides it.
+
+| Art Deco | First run | After reading bare `<function=...>` calls | Current model |
+|---|---|---|---|
+| Routing, 30 | 17/30 | 23/30 | 30/30 |
+| File routing, 17 | 13/17 | 14/17 | 15/17 |
+| Memory, 13 | 9/13 | 11/13 | 12/13 |
+
+What is left is the model's own choices: it often skips the missed-question skill and just solves the problem, plus a few tool calls it didn't need.
+
+**Switching models mid-chat.** Testing the web app end to end, a chat that started on Baroque and switched to Art Deco got stuck: Art Deco wrote 7 lines of "Let me try a simpler approach" and never answered. `respond` now logs every bad tool call to the server's output, and the log showed why. With Baroque's JSON tool calls earlier in the chat, Art Deco copied that format instead of its own XML, and wrote `{"name": "run_python", "code": "..."}`, with the arguments at the top level instead of inside `"arguments"`. Each call failed, and the model kept "fixing" code that was fine. `find_tool_call` now reads that form too. Replayed, the same chat ran the code on its second try (the first had a real error, an unescaped quote) and answered correctly.
+
+### Coding: 15 write-and-run tasks
+
+The routing tests have only 4 messages that expect `run_python`, so `eval_coding.py` adds 15 tasks like "write a function that counts the vowels in a string, then run it on ..." (`coding_tests.json`, answers computed in Python). Each runs with Ornate's full prompt and tools. Code checks four things: it called `run_python`, its last run had no error (Python's exit code), the loop guard didn't fire, and the expected answer is in the final reply.
+
+| | All four | Called Python | No error | Looped | Time |
+|---|---|---|---|---|---|
+| Current | 15/15 | 15/15 | 15/15 | 0 | 226 s |
+| 2507 | 15/15 | 15/15 | 15/15 | 0 | 101 s |
+| Art Deco | 14/15 | 14/15 | 14/15 | 0 | 295 s |
+
+Art Deco's miss is the same pattern as above: on "sum all the primes below 100", it wrote the code as text and never ran it. A second miss was the grader's: it answered "832,040" and the check wanted "832040", so the check now ignores thousands commas. These tasks are easy enough that the two general models are perfect, so they show that the code model is less reliable at running code in Ornate, not which model writes better code. The answer check is rough: short answers like "the" or "True" could match by accident.
+
+### All four picker models, side by side
+
+Rerun 10-31 with all of this section's harness changes. Mosaic always thinks before answering, so it is much slower. Times are for the whole set, one model running at a time.
+
+| | Baroque (30B-A3B) | 2507 Instruct | Mosaic (2507 Thinking) | Art Deco (Coder) |
+|---|---|---|---|---|
+| Held-out math, 45 | 44/45 (327 s) | 45/45 (515 s) | 45/45 (1,804 s) | not run |
+| Hard math, 50 | 50/50 (328 s) | 50/50 (365 s) | 50/50 (1,172 s) | not run |
+| Routing, 30 | 30/30 | 29/30 | 27/30 | 23/30 |
+| File routing, 17: model alone / with code check | 13/17 / 15/17 | 14/17 / 16/17 | 15/17 / 15/17 | 14/17 / 14/17 |
+| Memory, 13 | 10/13 / 11/13 (12/13 with the 10-28 date) | 12/13 | 12/13 | 11/13 |
+| Coding, 15 | 15/15 (226 s) | 15/15 (101 s) | 15/15 (424 s) | 14/15 (295 s); 15/15 after the `<code>` fix below |
+| MATH-500, 500 | 402 (80.4%) | 475 (95.0%) | first 100 only: 95 (see below) | not run |
+
+**Mosaic on MATH-500.** A full run would take about 5 hours, so Mosaic ran the first 100 problems (same reply limits as the others' 16,384-token runs, but its own 32,768). On those 100: Mosaic 95, 2507 94, Baroque 88, with Mosaic taking 73 minutes. 3 of its 5 misses were right answers in the wrong format: it wrote `<answer>5</answer>` or `<final_answer>0</final_answer>` instead of the `\boxed{}` the prompt asks for. Those stay wrong, since the instruction was part of the task.
+
+Mosaic's routing misses are its own choices: it checked 3³ in Python instead of loading the missed-question skill, wrote 4 practice questions itself instead of calling `start_quiz`, and searched the web for "what classes should I take senior year". On files it wrote a quiz itself and answered one real missed question directly; it never called `run_python` on the article or the essay, which the other models do. Thinking first did not make it better at choosing tools; on these sets it matches the 2507 Instruct on math and takes 2 to 4 times as long.
+
+### Baroque is now the 2507
+
+Since the 2507 matched or beat the original 30B-A3B on everything but one routing message, Baroque now loads Qwen3-30B-A3B-Instruct-2507. It has no thinking mode (Qwen moved thinking into the separate Thinking model, which is Mosaic), so Ornate's adaptive thinking does nothing on Baroque now. Three results the README cites had only been measured on the original model, so they were rerun on the 2507:
+
+| | Original 30B-A3B | 2507 |
+|---|---|---|
+| Held-out math, no tools or prompt | 34/45 | 39/45 |
+| Held-out math, Ornate | 44/45 | 45/45 |
+| Hard math, no tools | 48/50 | 50/50 |
+| Naming the slip, 9 problems (graded by reading) | 6/9 thinking off, 8/9 on | 7/9 (no thinking mode) |
+
+The harness still adds 6 points on the held-out set, all on arithmetic: a sum of primes, compound interest, a binomial probability, an angle, a standard deviation, and a digit sum that turned into a loop. The hard set no longer shows anything: the 2507 gets all 50 without tools.
+
+Slips, by the same standard as section 4: 7 found. On two (a mean, and order of operations) it first tried paths that don't give my answer, noticed, and kept going until one did; the original model with thinking off described a path to 67 for an answer of 28 and didn't notice. Missed: on the distribution problem it blamed a division (−10 ÷ −5) instead of distributing −3 wrong, and on the bias question it said the right answer was selection bias, not voluntary response bias.
+
+### MATH-500 without tools
+
+The held-out set says the harness adds 6 points, so the same check ran on MATH-500: Baroque (the 2507) with no tools and the plain "You are Ornate, a helpful assistant." prompt, 16,384-token limit.
+
+| | MATH-500 |
+|---|---|
+| Ornate (reasoning prompt and Python tool) | 475/500 (95.0%) |
+| Same model, no tools or prompt | **481/500 (96.2%)** |
+
+By level, no tools: 42/43, 90/90, 104/105, 122/128, 123/134. 466 problems were right both ways, 9 only with tools, 15 only without, and 10 neither. 15 against 9 is within what one run of each can tell apart, so the honest reading is that on MATH-500 the tools make no measurable difference for this model. 10 of the 15 no-tools-only wins never called Python in the tools run, so the difference there came from the prompt, not the tool, and 4 were tools-run replies with no answer at all.
+
+That fits the held-out result instead of contradicting it: those 45 problems are mostly arithmetic (sums of primes, compound interest, standard deviations), where Python fixes the model's slips, while MATH-500 is reasoning that this model already does well in its head. The original 30B-A3B was not run without tools on MATH-500.
+
+### Multi-turn conversations
+
+Every test above is a single message, so some of Ornate's most important rules were never measured: a delete happens only after "yes" in the *next* message, a skill is unloaded after the answer, and a save shouldn't repeat on later turns. `eval_multiturn.py` runs 11 short conversations (`multiturn_tests.json`) the same way `server.py` runs each turn (refresh the prompt, settle any pending delete, answer, unload skills, clear the save hint), on a fake memory list in a temporary file. Code checks the memory list at the end, which tools each turn called, and words in each reply. The conversations were written from Ornate's rules before the first run.
+
+| | Baroque (2507) | Art Deco |
+|---|---|---|
+| First run | 10/11 | |
+| After the fix below | **11/11** | 10/11 |
+
+**A note from the app caused the one failure.** "forget that i take ap precalculus", then "wait no, forget that i play soccer instead": the second message isn't a yes, so `handle_delete_reply` correctly cancelled the first delete, and added a note telling the model "If they said no, tell them in one short sentence, like 'Okay, I'll keep it.'" The model did exactly that and ignored the new request. When the reply is itself a delete request (`is_delete_request`), the note now says the earlier delete was cancelled and to handle this as a new one. Deleting still needs its own "are you sure" and a yes: rerun, Baroque asks "Are you sure you want me to forget: Plays soccer.?" and the memory list is unchanged. Art Deco's one miss: it solved the missed question with Python instead of loading the skill, its usual choice.
+
+### Art Deco's code never ran: a `<code>` tag
+
+Every saved result was searched for tool calls that came back as "bad tool call". 18 were in Art Deco's coding eval, all the same: `<function=run_python><code>...</code></function>`, a `<code>` tag where the template uses `<parameter=code>`. With no `code` found, `run_python` crashed, so none of that code ran. `xml_tool_call` now also reads a plain `<name>...</name>` tag, but only for the tool's own argument names, so other tags in the text can't be misread. All 18 saved calls parse with the fix. (The other 4 bad calls were Baroque's original model writing invalid JSON, its own mistake.) Art Deco rerun on 11-01:
+
+| Art Deco | 10-31 | 11-01, with the fix |
+|---|---|---|
+| Coding, 15 | 14/15 (295 s) | **15/15** (180 s) |
+| Routing, 30 | 23/30 | 21/30 |
+| File routing, 17 | 14/17 | 12/17 |
+| Memory, 13 | 11/13 | 10/13 |
+
+Coding is the only eval where the fix changes anything, and it took 40% less time without the crashed rounds. The other three moved the other way, but the transcripts show proper tool calls, parsed correctly, that the model chose differently: on the amendment question it now calls `remember` to save a fact about the First Amendment, and on the Super Bowl it no longer searches. The only thing that changed in its prompt is the date, so like Baroque's memory eval (above), Art Deco's tool choices move with the calendar.
+
+### For context
+
+The DeepSeek-R1 paper (January 2025) lists MATH-500 scores of 74.6% for GPT-4o, 78.3% for Claude 3.5 Sonnet, 90.0% for o1-mini, and 96.4% for o1. Those were measured without tools, with each lab's own prompt and grading, so they are not directly comparable to the numbers above. MATH has also been public for years, so these problems may be in any model's training data.
+
 ## Caveats
 
-- 45 to 50 problems per set. A gap of one or two questions is noise.
-- Sections 1 to 3 cover only math. Section 4 is hand-graded and small. The routing test is 30 messages, the memory test 10, and the search results are single questions. Nothing here measures coding or reading files yet.
+- 45 to 50 problems per set, except MATH-500. A gap of one or two questions is noise.
+- Sections 1 to 3 cover only math. Section 4 is hand-graded and small. The routing test is 30 messages, the memory test 13, the multi-turn test 11 conversations, and the search results are single questions. Section 9's coding tasks are simple, and MATH-500 is public, so the models may have seen it.
+- Sections 1 to 8 were run before section 9's harness changes (output cap, loop guard, 16,384-token limit, XML tool calls). The 30B-A3B's held-out, hard, routing, file-routing, and memory evals were rerun with them (section 9) and matched, except memory, which moved with the date; the skill, search, and other-model results were not rerun.
 - The tool prompt changed again after these runs, adding "only use the tool when a question needs calculation." The numbers above have not been rerun with that wording.
 - The grader requires an `ANSWER:` line. One 8B miss on the held-out set had the correct value but no answer line.

@@ -1,0 +1,132 @@
+{
+  "model": "mlx-community/Qwen3-Coder-30B-A3B-Instruct-4bit",
+  "thinking": false,
+  "score": 10,
+  "checked_score": 10,
+  "records": [
+    {
+      "message": "forget that i take ap stats",
+      "expect": "forget",
+      "facts": [
+        "Takes AP Stats."
+      ],
+      "got": "forget",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "<function=forget>\n<parameter=facts>\n[\"Takes AP Stats.\"]\n</parameter>\n</function>\n</tool_call>"
+    },
+    {
+      "message": "i quit soccer, delete that from your memory",
+      "expect": "forget",
+      "facts": [
+        "Plays soccer."
+      ],
+      "got": "forget",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "<function=forget>\n<parameter=facts>\n[\"Plays soccer.\"]\n</parameter>\n</function>\n</tool_call>"
+    },
+    {
+      "message": "forget my sat date and that i like short answers",
+      "expect": "forget",
+      "facts": [
+        "SAT is on December 5.",
+        "Likes short answers."
+      ],
+      "got": "forget",
+      "correct": false,
+      "checked_correct": false,
+      "reply": "<function=forget>\n<parameter=facts>\n[\"SAT is on December 5\"]\n</parameter>\n</function>\n</tool_call>\n<function=forget>\n<parameter=facts>\n[\"Likes short answers\"]\n</parameter>\n</function>\n</tool_call>"
+    },
+    {
+      "message": "delete everything you know about my classes",
+      "expect": "forget",
+      "facts": [
+        "Takes AP Stats.",
+        "Takes AP Precalculus."
+      ],
+      "got": "none",
+      "correct": false,
+      "checked_correct": false,
+      "reply": "I cannot delete what I know about your classes because I don't have any information stored about your classes. I only know what you've told me in our conversation, and I don't store information between conversations.\n\nIf you'd like me to forget specific information about your classes, I can help with that. Please let me know what specific information you'd like me to forget.\nI cannot delete what I know about your classes because I don't have any information stored about your classes. I only know what you've told me in our conversation, and I don't store information between conversations.\n\nIf you'd like me to forget specific information about your classes, I can help with that. Please let me know what specific information you'd like me to forget.\nI cannot delete what I know about your classes because I don't have any information stored about your classes. I only know what you've told me in our conversation, and I don't store information between conversations.\n\nIf you'd like me to forget specific information about your classes, I can help with that. Please let me know what specific information you'd like me to forget.\nI cannot delete what I know about your classes because I don't have any information stored about your classes. I only know what you've told me in our conversation, and I don't store information between conversations.\n\nIf you'd like me to forget specific information about your classes, I can help with that. Please let me know what specific information you'd like me to forget.\nI cannot delete what I know about your classes because I don't have any information stored about your classes. I only know what you've told me in our conversation, and I don't store information between conversations.\n\nIf you'd like me to forget specific information about your classes, I can help with that. Please let me know what specific information you'd like me to forget.\nI cannot delete what I know about your classes because I don't have any information stored about your classes. I only know what you've told me in our conversation\n\n(stopped: the answer started repeating itself)"
+    },
+    {
+      "message": "can you forget i said i like short answers",
+      "expect": "forget",
+      "facts": [
+        "Likes short answers."
+      ],
+      "got": "forget",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "<function=forget>\n<parameter=facts>\n[\"Likes short answers.\"]\n</parameter>\n</function>\n</tool_call>"
+    },
+    {
+      "message": "forget that i play basketball",
+      "expect": "none",
+      "got": "forget",
+      "correct": false,
+      "checked_correct": false,
+      "reply": "<function=forget>\n<parameter=facts>\n[\"Plays soccer.\"]\n</parameter>\n</function>\n</tool_call>"
+    },
+    {
+      "message": "dont forget my sat is on december 5",
+      "expect": [
+        "none",
+        "remember"
+      ],
+      "got": "remember",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "<function=remember>\n<parameter=facts>\n[\"SAT is on December 5.\"]\n</parameter>\n</function>\n</tool_call>"
+    },
+    {
+      "message": "i forgot my calculator at home lol, what's a trick for 15% tips",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "To calculate a 15% tip, you can use this trick:\n\n1. Take the bill amount and move the decimal point one place left to get 10%.\n2. Take half of that 10% amount to get 5%, then add it to the 10% to get 15%.\n\nFor example, with a $40 bill:\n- 10% of $40 is $4.\n- Half of $4 is $2.\n- Add them: $4 + $2 = $6.\n\nSo, a 15% tip on $40 is $6."
+    },
+    {
+      "message": "what do you know about me?",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "You take AP Stats and AP Precalculus. You like short answers. You play soccer. Your SAT is on December 5."
+    },
+    {
+      "message": "remind me, when is my SAT?",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "Your SAT is on December 5, 2026."
+    },
+    {
+      "message": "what do you remember about me?",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "You take AP Stats and AP Precalculus. You like short answers. You play soccer. Your SAT is on December 5."
+    },
+    {
+      "message": "tell me everything you know about me",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "I know that you take AP Stats and AP Precalculus. You like short answers and play soccer. Your SAT is on December 5."
+    },
+    {
+      "message": "whats in your memory",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "I don't have any saved memories from previous conversations. I'm ready to help with whatever you need!"
+    }
+  ]
+}

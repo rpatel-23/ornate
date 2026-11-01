@@ -82,6 +82,7 @@ def chat(body: ChatIn):
 
     def run():
         with lock:
+            harness.STOP.clear()   # a Stop pressed during an earlier answer must not stop this one
             started = False
             names, attached = [], ""
             try:
@@ -114,6 +115,9 @@ def chat(body: ChatIn):
             except Exception as e:
                 emit({"type": "error", "text": str(e)})
                 shown["text"] += "\n(error: " + str(e) + ")"
+            if harness.STOP.is_set():
+                shown["text"] += " (stopped)"
+                q.put({"type": "stopped"})
             if started:
                 turn = {"user": body.message, "bot": shown["text"]}
                 if names:
@@ -133,6 +137,12 @@ def chat(body: ChatIn):
                 break
 
     return StreamingResponse(events(), media_type="application/x-ndjson")
+
+@app.post("/stop")
+def stop():
+    """The Stop button: the answer being written ends at its next word. Messages waiting in the page's queue still go."""
+    harness.STOP.set()
+    return {"ok": True}
 
 @app.get("/memory")
 def get_memory():

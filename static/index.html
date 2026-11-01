@@ -85,6 +85,15 @@
   .welcome { align-self:center; text-align:center; margin:12vh 0 8px; }
   .welcome h2 { font-size:28px; margin:0 0 6px; font-weight:600; }
   .welcome p { margin:0; color:var(--muted); }
+  /* a new chat: the box sits in the middle under the welcome, with starter ideas below it.
+     After the first message the welcome is gone, "empty" comes off, and the box goes back to the bottom. */
+  body.empty #chat { flex:0 0 auto; overflow:visible; padding-top:22vh; }
+  body.empty .welcome { margin:0; }
+  body.empty form { border-top:none; margin-bottom:auto; }
+  #starters { display:none; max-width:760px; margin:12px auto 0; flex-wrap:wrap; gap:8px; justify-content:center; }
+  body.empty #starters { display:flex; }
+  #starters button { border-radius:999px; color:var(--muted); font-size:13px; padding:6px 14px; }
+  #starters button:hover { color:var(--text); border-color:var(--accent); }
   .typing { color:var(--muted); font-style:italic; }
   .overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; padding:16px; z-index:10; }
   .overlay.open { display:flex; }
@@ -124,6 +133,8 @@
   textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
   #send { background:var(--accent); color:#fff; border:none; border-radius:12px; padding:0 18px; }
   #send:disabled { opacity:.5; cursor:default; }
+  #stop { background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:12px; padding:0 14px; }
+  #stop[hidden] { display:none; }
 </style>
 </head>
 <body class="side-hidden">   <!-- sidebar starts closed; ☰ opens it -->
@@ -147,7 +158,7 @@
     <div class="set-row"><div class="title">Appearance</div><div class="seg" id="themeSeg"></div></div>
     <div class="set-row">
       <div class="title">Thinking</div><div class="seg" id="thinkSeg"></div>
-      <div class="hint">Auto thinks only after loading a skill or searching the web. Always is slower but more careful. Resets when the server restarts.</div>
+      <div class="hint">Auto thinks only after loading a skill or searching the web. Always is slower but more careful. Only Filigree can switch: Mosaic always thinks, Baroque and Art Deco never do. Resets when the server restarts.</div>
     </div>
     <div class="modal-foot" id="setModel"></div>
   </div>
@@ -177,13 +188,18 @@
     </button>
     <input type="file" id="filePick" multiple hidden>
     <textarea id="box" placeholder="Message Ornate…" autofocus></textarea>
+    <button id="stop" type="button" title="Stop this answer" hidden>■ Stop</button>
     <button id="send" type="submit">Send</button>
   </div>
+  <div id="starters"></div>
 </form>
 </div>
 <script>
 const log = document.getElementById("log"), box = document.getElementById("box"),
-      send = document.getElementById("send"), chat = document.getElementById("chat");
+      send = document.getElementById("send"), chat = document.getElementById("chat"),
+      stopBtn = document.getElementById("stop");
+// Stop: the server ends the answer at its next word. Anything waiting in the queue still gets sent after.
+stopBtn.onclick = () => { stopBtn.disabled = true; fetch("/stop", { method:"POST" }); };
 
 // make text safe to put in HTML: < and > become harmless symbols instead of tags
 const esc = t => t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -225,12 +241,20 @@ function render(text) {
 const fileChips = names => names.length
   ? '<div class="files">' + names.map(n => `<span class="file">📎 ${esc(n)}</span>`).join("") + "</div>" : "";
 
+// follow the answer down only while you're at the bottom: scroll up to read and it leaves you there,
+// scroll back to the bottom and it follows again
+let following = true;
+chat.addEventListener("scroll", () => {
+  following = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 60;
+});
+
 function add(cls, html) {
   const d = document.createElement("div");
   d.className = "msg " + cls;
   d.innerHTML = html;
   log.appendChild(d);
-  chat.scrollTop = chat.scrollHeight;
+  chat.scrollTop = chat.scrollHeight;   // a new message always jumps to the bottom
+  following = true;
   return d;
 }
 
@@ -350,6 +374,7 @@ function startEdit(bubble, bar, text) {
 // files = [{name, data}] to send; names = what to show (on an edit, the old files' names)
 async function run(text, edit = null, files = [], names = files.map(f => f.name)) {
   busy = true;
+  stopBtn.hidden = false; stopBtn.disabled = false;
   log.querySelector(".welcome")?.remove();
   const mine = add("me", render(text) + fileChips(names));
   mine._names = names;
@@ -389,11 +414,14 @@ async function run(text, edit = null, files = [], names = files.map(f => f.name)
           if (ev.name === "remember" && !out.startsWith("Not saved") && !out.startsWith("Nothing"))
             addChip(out.includes("Saved.") ? "✓ saved to memory" : "✓ already in memory", bubble);
           if (ev.name === "forget" && out.startsWith("Deleted")) addChip("✓ deleted from memory", bubble);
+        } else if (ev.type === "stopped") {
+          answer += " (stopped)";   // same note the server saves, so a reopened chat looks the same
+          bubble.className = "msg bot"; bubble.innerHTML = render(answer);
         } else if (ev.type === "error") {
           answer += "\n(error: " + ev.text + ")";
           bubble.className = "msg bot"; bubble.innerHTML = render(answer);
         }
-        chat.scrollTop = chat.scrollHeight;
+        if (following) chat.scrollTop = chat.scrollHeight;
       }
     }
     if (!answer) { bubble.className = "msg bot"; bubble.textContent = "(no reply)"; }
@@ -402,7 +430,7 @@ async function run(text, edit = null, files = [], names = files.map(f => f.name)
     bubble.className = "msg bot";
     bubble.textContent = "Couldn't reach the server. Is uvicorn running?";
   }
-  busy = false; box.focus();
+  busy = false; stopBtn.hidden = true; box.focus();
   loadSidebar();   // this chat just moved to the top
   if (queue.length) { const next = queue.shift(); renderQueue(); run(next.text, null, next.files); }
 }
@@ -466,6 +494,25 @@ box.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) sen
 // ---------- sidebar: saved chats, folders, pins ----------
 let activeId = null;   // the saved chat on screen; null = a new chat that hasn't been sent yet
 const sideList = document.getElementById("sideList"), menu = document.getElementById("menu");
+// starter ideas on a new chat; one per thing Ornate can do. Clicking fills the box (it doesn't send), so you can edit first.
+const STARTERS = [
+  ["🧮 Solve a math problem", "Solve x^2 - 5x + 6 = 0 and check the answer with Python."],
+  ["📝 Quiz me", "Quiz me on cell biology, 5 questions."],
+  ["🔎 Search the web", "What's the latest news in AI this week?"],
+  ["💻 Write some code", "Write a function that finds the most common word in a sentence and test it."],
+];
+const startersBox = document.getElementById("starters");
+STARTERS.forEach(([label, text]) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.textContent = label;
+  b.onclick = () => { box.value = text; box.focus(); };
+  startersBox.appendChild(b);
+});
+// "empty" is on exactly while the welcome is showing; watching the log keeps it right however the welcome comes or goes
+const syncEmpty = () => document.body.classList.toggle("empty", !!log.querySelector(".welcome"));
+new MutationObserver(syncEmpty).observe(log, { childList: true });
+syncEmpty();
+
 const WELCOME = '<div class="welcome"><h2>Welcome to Ornate</h2><p>Runs locally on this Mac. Ask anything.</p></div>';
 const narrow = () => window.innerWidth <= 760;
 

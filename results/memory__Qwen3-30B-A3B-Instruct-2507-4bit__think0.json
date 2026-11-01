@@ -1,0 +1,132 @@
+{
+  "model": "mlx-community/Qwen3-30B-A3B-Instruct-2507-4bit",
+  "thinking": false,
+  "score": 12,
+  "checked_score": 12,
+  "records": [
+    {
+      "message": "forget that i take ap stats",
+      "expect": "forget",
+      "facts": [
+        "Takes AP Stats."
+      ],
+      "got": "forget",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "<tool_call>\n{\"name\": \"forget\", \"arguments\": {\"facts\": [\"Takes AP Stats.\"]}}\n</tool_call>"
+    },
+    {
+      "message": "i quit soccer, delete that from your memory",
+      "expect": "forget",
+      "facts": [
+        "Plays soccer."
+      ],
+      "got": "forget",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "<tool_call>\n{\"name\": \"forget\", \"arguments\": {\"facts\": [\"Plays soccer.\"]}}\n</tool_call>"
+    },
+    {
+      "message": "forget my sat date and that i like short answers",
+      "expect": "forget",
+      "facts": [
+        "SAT is on December 5.",
+        "Likes short answers."
+      ],
+      "got": "forget",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "<tool_call>\n{\"name\": \"forget\", \"arguments\": {\"facts\": [\"SAT is on December 5\", \"Likes short answers\"]}}\n</tool_call>"
+    },
+    {
+      "message": "delete everything you know about my classes",
+      "expect": "forget",
+      "facts": [
+        "Takes AP Stats.",
+        "Takes AP Precalculus."
+      ],
+      "got": "forget",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "<tool_call>\n{\"name\": \"forget\", \"arguments\": {\"facts\": [\"Takes AP Stats.\", \"Takes AP Precalculus.\"]}}\n</tool_call>"
+    },
+    {
+      "message": "can you forget i said i like short answers",
+      "expect": "forget",
+      "facts": [
+        "Likes short answers."
+      ],
+      "got": "forget",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "<tool_call>\n{\"name\": \"forget\", \"arguments\": {\"facts\": [\"Likes short answers.\"]}}\n</tool_call>"
+    },
+    {
+      "message": "forget that i play basketball",
+      "expect": "none",
+      "got": "forget",
+      "correct": false,
+      "checked_correct": false,
+      "reply": "<tool_call>\n{\"name\": \"forget\", \"arguments\": {\"facts\": [\"Plays basketball.\"]}}\n</tool_call>"
+    },
+    {
+      "message": "dont forget my sat is on december 5",
+      "expect": [
+        "none",
+        "remember"
+      ],
+      "got": "remember",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "<tool_call>\n{\"name\": \"remember\", \"arguments\": {\"facts\": [\"SAT is on December 5\"]}}\n</tool_call>"
+    },
+    {
+      "message": "i forgot my calculator at home lol, what's a trick for 15% tips",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "To calculate 15% tip quickly:\n\n1. Find 10% of the bill by moving the decimal one place left.\n2. Take half of that 10%.\n3. Add the two together.\n\nExample: For a $40 bill:\n- 10% = $4\n- Half of $4 = $2\n- 15% = $4 + $2 = $6\n\nSo, 15% of $40 is $6."
+    },
+    {
+      "message": "what do you know about me?",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "Takes AP Stats.  \nTakes AP Precalculus.  \nLikes short answers.  \nPlays soccer.  \nSAT is on December 5."
+    },
+    {
+      "message": "remind me, when is my SAT?",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "The SAT is on December 5, 2026."
+    },
+    {
+      "message": "what do you remember about me?",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "You take AP Stats and AP Precalculus, like short answers, play soccer, and have the SAT on December 5."
+    },
+    {
+      "message": "tell me everything you know about me",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "You take AP Stats and AP Precalculus. You like short answers. You play soccer. Your SAT is on December 5."
+    },
+    {
+      "message": "whats in your memory",
+      "expect": "none",
+      "got": "none",
+      "correct": true,
+      "checked_correct": true,
+      "reply": "I don't have any saved facts about you. I only remember what you've explicitly asked me to save."
+    }
+  ]
+}

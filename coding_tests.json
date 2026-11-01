@@ -1,0 +1,62 @@
+[
+  {
+    "message": "Write a function that counts the vowels in a string, then run it on 'Ornate runs on my laptop'.",
+    "answer": "7"
+  },
+  {
+    "message": "Write a function that reverses each word in a sentence but keeps the word order. Run it on 'hello world' and tell me the result.",
+    "answer": "olleh dlrow"
+  },
+  {
+    "message": "Write a function that finds the most common word in a sentence and test it on 'the cat and the dog and the bird'.",
+    "answer": "the"
+  },
+  {
+    "message": "Write code that sums all the prime numbers below 100 and run it.",
+    "answer": "1060"
+  },
+  {
+    "message": "Write a function that returns the nth Fibonacci number (fib(1) = 1, fib(2) = 1) and run it for n = 30.",
+    "answer": "832040"
+  },
+  {
+    "message": "Write a function that counts how many steps the Collatz sequence takes to reach 1, starting from 27. Run it.",
+    "answer": "111"
+  },
+  {
+    "message": "Write a function that checks if a string is a palindrome, ignoring spaces and capital letters. Test it on 'Was it a car or a cat I saw' and tell me True or False.",
+    "answer": "True"
+  },
+  {
+    "message": "Write code that finds the largest number under 1000 that is divisible by both 7 and 13, and run it.",
+    "answer": "910"
+  },
+  {
+    "message": "Write a function that converts a temperature from Fahrenheit to Celsius, then run it on 451. Round to one decimal.",
+    "answer": "232.8"
+  },
+  {
+    "message": "Write a function that counts how many words in a sentence are longer than 4 letters. Run it on 'Local models can be surprisingly capable these days'.",
+    "answer": "5"
+  },
+  {
+    "message": "Write code that finds the sum of the digits of 2 to the power of 100, and run it.",
+    "answer": "115"
+  },
+  {
+    "message": "Write a function that removes duplicate numbers from a list but keeps the first-seen order. Run it on [3, 1, 3, 2, 1, 5, 2] and show the result.",
+    "answer": "[3, 1, 2, 5]"
+  },
+  {
+    "message": "Write a function that returns the greatest common divisor of two numbers without using math.gcd. Run it on 1071 and 462.",
+    "answer": "21"
+  },
+  {
+    "message": "Write code that counts how many numbers from 1 to 1000 contain the digit 7, and run it.",
+    "answer": "271"
+  },
+  {
+    "message": "Write a function that computes the average of a list, then run it on [12, 15, 21, 30, 47] and give the answer.",
+    "answer": "25"
+  }
+]

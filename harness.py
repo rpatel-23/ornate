@@ -3,20 +3,39 @@ import json
 import re
 import subprocess
 import sys
+import threading
 from mlx_lm import load, stream_generate
+from mlx_lm.sample_utils import make_logits_processors
 
 import gc
 import os
 import mlx.core as mx
 
 # the models you can pick in the web app. Names follow "Ornate": styles of decorative art.
-# Both scored about the same time on the math eval (EVALS.md section 2); the 8B's win is memory, not speed.
+# Baroque was Qwen3-30B-A3B until 10-31; the 2507 version beat it (MATH-500 95.0% vs 80.4%, EVALS.md section 9).
+# It can't think (Qwen moved thinking to a separate model, Mosaic), so the thinking setting does nothing on it.
 MODELS = {
-    "baroque":  {"name": "Baroque",  "repo": "mlx-community/Qwen3-30B-A3B-4bit",
-                 "about": "30B · smartest"},
+    "baroque":  {"name": "Baroque",  "repo": "mlx-community/Qwen3-30B-A3B-Instruct-2507-4bit",
+                 "about": "30B · best all-round"},
     "filigree": {"name": "Filigree", "repo": "mlx-community/Qwen3-8B-4bit",
                  "about": "8B · lighter on memory"},
+    # always thinks before answering, often 5,000+ words, so it gets a much bigger reply limit (Qwen suggests 32,768)
+    "mosaic":   {"name": "Mosaic",   "repo": "mlx-community/Qwen3-30B-A3B-Thinking-2507-4bit",
+                 "about": "30B · thinks first, slow", "max_tokens": 32768},
+    # trained mostly on code; never thinks, and writes tool calls as XML (see find_tool_call).
+    # repetition_penalty 1.05 is from the model's own generation_config.json: without it, it wrote one function 24 times.
+    "artdeco":  {"name": "Art Deco", "repo": "mlx-community/Qwen3-Coder-30B-A3B-Instruct-4bit",
+                 "about": "30B · code", "repetition_penalty": 1.05},
 }
+DEFAULT_MAX_TOKENS = 16384  # longest reply for models without their own max_tokens (Qwen's suggestion for 2507 Instruct).
+                            # It was 4000: on MATH-500 that cut off 51 of the 2507 model's 60 misses before they reached an answer.
+
+def setting(key, default=None):
+    """A setting from the current model's MODELS entry, like max_tokens; default if it has none."""
+    return next((m.get(key, default) for m in MODELS.values() if m["repo"] == MODEL), default)
+
+def max_tokens():
+    return setting("max_tokens", DEFAULT_MAX_TOKENS)
 
 # ORNATE_THINK=1: always think. ORNATE_THINK=0: never think.
 # Not set: think only after a tool that needs careful work.
@@ -25,6 +44,7 @@ THINK = THINK_MODE == "always"
 THINK_AFTER = {"load_skill", "web_search"}
 
 MODEL = model = tokenizer = None
+STOP = threading.Event()   # the web page's Stop button sets this; the answer ends at the next word
 
 def use_model(repo):
     """Switch to another model. The old one is unloaded first, so only one is ever in memory."""
@@ -81,6 +101,8 @@ def print_last_value(code):
     rest = ast.unparse(ast.Module(body=tree.body[:-1], type_ignores=[]))
     return rest + f"\n_last = {last}\nif _last is not None:\n    print(_last)"
 
+MAX_OUTPUT = 2000   # characters of run_python output the model gets back
+
 def run_python(code):
     # PYTHON_COLORS / NO_COLOR: plain error text. Python 3.14 can add terminal color codes like [35m, which are junk to the model.
     env = {**os.environ, "PYTHON_COLORS": "0", "NO_COLOR": "1"}
@@ -89,6 +111,12 @@ def run_python(code):
             [sys.executable, "-c", print_last_value(code)], capture_output=True, text=True, timeout=10, env=env
         )
         output = (result.stdout + result.stderr).strip() or "(no output. Use print() to show the result.)"
+        if len(output) > MAX_OUTPUT:
+            # a huge print once made a 144,000-token prompt (past the model's limit) and froze MATH-500 for 9 hours.
+            # Keep the start and the end (where errors show up) and say how much was cut.
+            half = MAX_OUTPUT // 2
+            output = (output[:half] + f"\n... ({len(output) - MAX_OUTPUT} characters cut. Print less, e.g. just the final answer.) ...\n"
+                      + output[-half:])
         if result.returncode != 0:
             # the code crashed (decided by Python's exit code, not the model's words). Without this note the model
             # sometimes says "Let's calculate..." and stops (seen on 2x^2+3x+2=0, where math.sqrt hit a negative).
@@ -111,14 +139,29 @@ def ask_model(messages, use_tools, show, think=None, emit=None):
         add_generation_prompt=True,
         enable_thinking=THINK if think is None else think,
     )
-    reply = ""
+    # Thinking-2507's template writes the opening <think> into the prompt itself, so the reply only has </think>.
+    # Put it back, so the code below can hide the thinking the same way for every model.
+    # (the prompt is a list of token numbers, so decode its last few to check)
+    reply = "<think>\n" if tokenizer.decode(prompt[-4:]).endswith("<think>\n") else ""
     shown = 0
     sent = 0   # how much visible text has gone to emit
-    for chunk in stream_generate(model, tokenizer, prompt=prompt, max_tokens=4000):
+    # a repetition penalty makes recent words a little less likely; it still picks the top word, so answers stay repeatable
+    penalty = setting("repetition_penalty")
+    extra = {"logits_processors": make_logits_processors(repetition_penalty=penalty)} if penalty else {}
+    for chunk in stream_generate(model, tokenizer, prompt=prompt, max_tokens=max_tokens(), **extra):
+        if STOP.is_set():
+            break
         reply += chunk.text
+        if len(reply) > 2000 and len(reply) % 50 < len(chunk.text) and reply.count(reply[-300:]) >= 3:
+            # the same 300 characters 3 times: the model is stuck in a loop (Art Deco wrote one function 24 times
+            # saying "Let me run this code" but never calling the tool). Code ends it, not the model.
+            reply += "\n\n(stopped: the answer started repeating itself)"
+            if emit:
+                emit({"type": "text", "text": "\n\n(stopped: the answer started repeating itself)"})
+            break
         if emit:
             # for the web page: no thinking, and stop before any tool call text
-            clean = re.sub(r"<think>.*?(</think>|$)", "", reply, flags=re.DOTALL).split("<tool_call>")[0].lstrip()
+            clean = re.sub(r"<think>.*?(</think>|$)", "", reply, flags=re.DOTALL).split("<tool_call>")[0].split("<function=")[0].lstrip()
             if len(clean) > sent:
                 emit({"type": "text", "text": clean[sent:]})
                 sent = len(clean)
@@ -142,11 +185,54 @@ def ask_model(messages, use_tools, show, think=None, emit=None):
         print()
     return reply
 
+def xml_tool_call(text):
+    """Qwen3-Coder's format: <function=run_python><parameter=code>print(1)</parameter></function>.
+    Every value arrives as text, so numbers and lists are turned back into numbers and lists using the tool's own spec."""
+    name = re.search(r"<function=([\w-]+)>", text).group(1)
+    spec = next((t["function"]["parameters"]["properties"] for t in TOOLS if t["function"]["name"] == name), {})
+    found = re.findall(r"<parameter=([\w-]+)>\n?(.*?)\n?</parameter>", text, re.DOTALL)
+    # it also wrote <code>print(1)</code> instead of <parameter=code>: 18 times in the coding eval, so none of that code ran.
+    # Only the tool's own argument names are looked for, so other tags in the text can't be misread.
+    for key in spec:
+        if key not in dict(found):
+            plain = re.search(rf"<{key}>\n?(.*?)\n?</{key}>", text, re.DOTALL)
+            if plain:
+                found.append((key, plain.group(1)))
+    args = {}
+    for key, value in found:
+        if spec.get(key, {}).get("type", "string") != "string":
+            value = json.loads(value)   # "5" -> 5, "[1, 2]" -> [1, 2]
+        args[key] = value
+    return {"name": name, "arguments": args}
+
+def json_tool_call(text):
+    """A JSON call. Usually {"name": ..., "arguments": {...}}, but after another model's turns in the same chat
+    Art Deco wrote {"name": "run_python", "code": "..."}, with the arguments at the top level. Both mean the same call."""
+    data = json.loads(text)
+    if "arguments" not in data:
+        data = {"name": data["name"], "arguments": {k: v for k, v in data.items() if k != "name"}}
+    return data
+
 def find_tool_call(reply):
     """Return the tool call in a reply as {"name": ..., "arguments": ...}, or None if there isn't one."""
     call = re.search(r"<tool_call>(.*?)</tool_call>", reply, re.DOTALL)
+    if call and "<function=" in call.group(1):
+        return xml_tool_call(call.group(1))
     if call:
-        return json.loads(call.group(1))
+        return json_tool_call(call.group(1))
+    # the 2507 model once stopped right after the JSON, before writing </tool_call> (LCM of 84, 126, 220), so the code never ran
+    unclosed = re.search(r"<tool_call>\s*(\{.*\})\s*$", reply, re.DOTALL)
+    if unclosed:
+        return json_tool_call(unclosed.group(1))
+    # same thing in Art Deco's XML format: it stopped right after </function>
+    unclosed = re.search(r"<tool_call>(\s*<function=.*</function>)\s*$", reply, re.DOTALL)
+    if unclosed:
+        return xml_tool_call(unclosed.group(1))
+    # and with no <tool_call> tags at all: on the routing evals Art Deco called remember, start_quiz and web_search
+    # as a bare <function=...> 7 times, and none of them ran
+    bare_xml = re.search(r"<function=[\w-]+>.*?</function>", reply, re.DOTALL)
+    if bare_xml:
+        return xml_tool_call(bare_xml.group(0))
     # backup: sometimes the model writes the call without its tags, like
     #   remember
     #   {"fact": "Hates long explanations."}
@@ -162,6 +248,8 @@ def respond(messages, use_tools=True, show=True, check=None, emit=None):
     for _ in range(5):
         reply = ask_model(messages, use_tools, show, think, emit)
         messages.append({"role": "assistant", "content": reply})
+        if STOP.is_set():
+            break   # stopped: don't run a half-written tool call
         try:
             data = find_tool_call(reply)
             if data is None:
@@ -178,6 +266,8 @@ def respond(messages, use_tools=True, show=True, check=None, emit=None):
             output = TOOL_FUNCS[name](data["arguments"])
         except Exception as e:
             name, output = "tool error", f"Error: bad tool call ({e})"
+            # the web page can't show this, so log it where the server's output goes, with the end of the reply that caused it
+            print(f"[bad tool call] {e!r} | reply ended: {reply[-300:]!r}", file=sys.stderr, flush=True)
         if show:
             preview = output if name in ("run_python", "web_search") else (output.splitlines() or [""])[0]
             print(f"\n[{name}] {preview}\n")
@@ -186,7 +276,7 @@ def respond(messages, use_tools=True, show=True, check=None, emit=None):
             emit({"type": "tool", "name": name, "output": output[:300]})   # the page decides what to show from the result   # lets the page show "searching the web..." etc.
         if THINK_MODE == "auto" and name in THINK_AFTER:  # new
             think = True  # new: the hard part starts now, so think from here on
-    if messages[-1]["role"] == "tool":
+    if messages[-1]["role"] == "tool" and not STOP.is_set():
         reply = ask_model(messages, False, show, think, emit)
         messages.append({"role": "assistant", "content": reply})
     return reply

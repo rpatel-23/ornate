@@ -4,7 +4,7 @@ import memory
 from datetime import date
 import re
 import os
-from harness import respond, SYSTEM_TOOLS, add_tool
+from harness import respond, SYSTEM_TOOLS, add_tool, find_tool_call
 from files import read_file
 from quiz import run_quiz
 
@@ -149,6 +149,10 @@ def handle_delete_reply(text):
     if YES.search(text):
         gone = [memory.remove_text(f) for f in facts]
         return "\n\n(Note from the app: the user confirmed, so these were deleted: " + " | ".join(gone) + ". Tell the user in one short sentence, like \"Done, I've forgotten that.\")"
+    if is_delete_request(text):
+        # "wait no, forget that i play soccer instead": the old delete is off, but this is a new one. The note below
+        # used to say "tell them Okay, I'll keep it", and the model did exactly that and ignored the new request.
+        return "\n\n(Note from the app: the earlier delete was cancelled, so nothing was deleted. This message asks to forget something else: handle it as a new request.)"
     return "\n\n(Note from the app: the user did not confirm, so nothing was deleted. If they said no, tell them in one short sentence, like \"Okay, I'll keep it.\" Otherwise just answer their message.)"
 
 add_tool({
@@ -170,12 +174,22 @@ add_tool({
     },
 }, forget)
 
+def calls(m, name):
+    """Is this an assistant message that calls the tool `name`? Uses find_tool_call, so JSON, XML (Art Deco) and bare calls all count."""
+    if m["role"] != "assistant":
+        return False
+    try:
+        call = find_tool_call(m["content"])
+    except Exception:   # a broken call isn't a call to anything
+        return False
+    return bool(call) and call["name"] == name
+
 def unload_skills(messages):
     # once an answer is finished, swap each loaded skill's full text for a short note,
     # so old skill instructions do not leak into later, unrelated messages
     for i, m in enumerate(messages[:-1]):
         nxt = messages[i + 1]
-        if m["role"] == "assistant" and re.search(r'"name":\s*"load_skill"', m["content"]) and nxt["role"] == "tool":
+        if calls(m, "load_skill") and nxt["role"] == "tool":
             nxt["content"] = "(skill instructions were used for that answer and are no longer loaded)"
 
 # ---- memory saves happen only when the user asks ----
@@ -238,7 +252,7 @@ def called_remember(messages):
     for m in reversed(messages):
         if m["role"] == "user":
             return False
-        if m["role"] == "assistant" and re.search(r'"name":\s*"remember"|^\s*remember\s*\{', m["content"], re.M):
+        if calls(m, "remember"):
             return True
     return False
 

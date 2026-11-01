@@ -1,8 +1,8 @@
 {
   "model": "mlx-community/Qwen3-30B-A3B-4bit",
   "thinking": false,
-  "score": 12,
-  "checked_score": 12,
+  "score": 10,
+  "checked_score": 11,
   "records": [
     {
       "message": "forget that i take ap stats",
@@ -107,10 +107,10 @@
     {
       "message": "what do you remember about me?",
       "expect": "none",
-      "got": "none",
-      "correct": true,
-      "checked_correct": true,
-      "reply": "I remember that you take AP Stats and AP Precalculus, you like short answers, you play soccer, and your SAT is on December 5."
+      "got": "remember",
+      "correct": false,
+      "checked_correct": false,
+      "reply": "<tool_call>\n{\"name\": \"remember\", \"arguments\": {\"facts\": [\"Takes AP Stats.\", \"Takes AP Precalculus.\", \"Likes short answers.\", \"Plays soccer.\", \"SAT is on December 5.\"]}}\n</tool_call>"
     },
     {
       "message": "tell me everything you know about me",
@@ -123,10 +123,10 @@
     {
       "message": "whats in your memory",
       "expect": "none",
-      "got": "none",
-      "correct": true,
+      "got": "forget",
+      "correct": false,
       "checked_correct": true,
-      "reply": "I don't have any saved facts about you. Let me know if there's anything you'd like me to remember!"
+      "reply": "<tool_call>\n{\"name\": \"forget\", \"arguments\": {\"facts\": [\"Takes AP Stats.\", \"Takes AP Precalculus.\", \"Likes short answers.\", \"Plays soccer.\", \"SAT is on December 5.\"]}}\n</tool_call>"
     }
   ]
 }
