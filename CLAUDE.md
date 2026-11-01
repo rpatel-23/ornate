@@ -65,7 +65,7 @@ python eval_multiturn.py            # 11 conversations on a fake memory file, ~2
 
 ## Next up
 
-1. Auto-picking the model (Rishabh wants picker first, auto later): measure before building.
+1. Auto-pick measured 11-01 (EVALS.md section 11): not worth it. Mosaic fixes 15/25 of Baroque's MATH-500 misses but is ~3x slower; hard coding (`coding_hard_tests.json`, `eval_coding.py --tests`): Baroque 9/10, Mosaic 9/10, Art Deco 6/10. Idea instead: a "think harder" button that reruns one answer on Mosaic. The loop guard can stop Mosaic when it rewrites code while thinking (9-queens).
 2. The 3 writing tasks that still call run_python (shorten, translate, outline in routing_text_tests.json); maybe a fresh test set too.
 3. Windows port (laptop with RTX 4070, 8 GB VRAM). MLX is Mac-only, so harness.py needs a second engine: llama-cpp-python with CUDA and GGUF files, picked by platform, keeping the Baroque/Filigree names. Filigree (8B, ~5 GB at 4-bit) fits in VRAM; Baroque (30B MoE, ~17 GB) needs its expert layers kept in system RAM, so check the laptop's RAM first.
 4. Then: fine-tuning (LoRA on MLX) with before/after evals on data it never trained on, vision, RAG over class notes, multi-language code runner with a sandbox.

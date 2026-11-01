@@ -4,7 +4,8 @@ Everything is decided by code, not the model's words:
   ran_ok   - its last run_python finished without an error (Python's exit code, via the crash note)
   looped   - the loop guard had to stop the answer
   answer   - the expected answer appears in the final reply (rough: short answers like "the" can match by accident)
-Run: python eval_coding.py      (ORNATE_MODEL=... picks the model)"""
+Run: python eval_coding.py      (ORNATE_MODEL=... picks the model; --tests coding_hard_tests.json for the harder set)"""
+import argparse
 import json
 import os
 import re
@@ -15,7 +16,10 @@ from harness import respond, MODEL
 CRASH_NOTE = "(The code raised an error."   # run_python adds this when the code crashes
 LOOP_NOTE = "(stopped: the answer started repeating itself)"
 
-tests = json.load(open("coding_tests.json"))
+parser = argparse.ArgumentParser()
+parser.add_argument("--tests", default="coding_tests.json", help="which test file to use")
+args = parser.parse_args()
+tests = json.load(open(args.tests))
 start = time.time()
 records = []
 for n, t in enumerate(tests, 1):
@@ -37,7 +41,8 @@ for n, t in enumerate(tests, 1):
 total = len(records)
 count = lambda key: sum(r[key] for r in records)
 os.makedirs("results", exist_ok=True)
-path = f"results/coding__{MODEL.split('/')[-1]}.json"
+name = "coding" if args.tests == "coding_tests.json" else args.tests.removesuffix(".json").removesuffix("_tests")   # each test file gets its own results
+path = f"results/{name}__{MODEL.split('/')[-1]}.json"
 with open(path, "w") as f:
     json.dump({"model": MODEL, "score": count("correct"), "total": total, "seconds": round(time.time() - start),
                "records": records}, f, indent=1)

@@ -15,6 +15,8 @@ parser.add_argument("--mode", choices=["tools", "no_tools"], default="tools")
 parser.add_argument("--limit", type=int, default=500, help="only run the first N problems")
 parser.add_argument("--rerun-cut", type=int, metavar="OLD_LIMIT",
                     help="rerun only the problems whose reply hit OLD_LIMIT tokens in the saved results, plus 5 that didn't as a check")
+parser.add_argument("--only", metavar="IDS_JSON",
+                    help="run only the problems listed in this JSON file (a list of ids), e.g. the ones another model missed")
 args = parser.parse_args()
 
 import harness
@@ -37,6 +39,10 @@ if args.rerun_cut:
     rows = [r for r in rows if r["unique_id"] in cut or r["unique_id"] in control]
     print(f"rerunning {len(cut)} cut-off problems and {len(control)} controls", flush=True)
     path = path.replace(".json", f"__rerun_cut{args.rerun_cut}.json")
+if args.only:
+    wanted = set(json.load(open(args.only)))
+    rows = [r for r in rows if r["unique_id"] in wanted]
+    path = path.replace(".json", f"__only_{os.path.basename(args.only).removesuffix('.json')}.json")   # its own file, so a full run isn't overwritten
 
 # resume: if an earlier run of this same file stopped partway (crash, out of memory), keep what it saved and skip those problems
 done_before = []

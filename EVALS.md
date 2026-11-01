@@ -518,6 +518,31 @@ The routing drop is the date, not this change: those 30 messages have no files, 
 
 Still failing: "shorten my cover letter to one paragraph", "translate this article into spanish" and "turn these notes into an outline" call Python. The 3 counting tasks still call Python, as they should. The new tests were written by me and looked at while choosing the format, so a fresh set would be a fairer check.
 
+## 11. Is auto-picking the model worth it?
+
+Before building code that picks a model for each message, I checked whether the specialists beat Baroque on the kinds of questions where Baroque fails. A picker can only help on those.
+
+**Math: Mosaic on Baroque's 25 MATH-500 misses** (`eval_math500.py --only results/math500_baroque_misses.json`; 19 of them at level 5). Six of these were already in Mosaic's first-100 run, where it got 5. On the other 19 it got 10, so **15/25** under the strict grader. Two more of its answers are right by reading but in the wrong form: 12π rounded to "37.7", and a correct 64 written in `<final_answer>` tags instead of `\boxed{}`. The grader was left as is. One more hit the 32,768-token limit while still thinking. It took about 4 minutes per problem.
+
+That doesn't mean Mosaic would score 490/500. We don't know how many problems Baroque gets right that Mosaic misses. On the first 100 it was 95 for Mosaic vs 94 for Baroque.
+
+**Coding: 10 harder tasks** (`coding_hard_tests.json`: coin change, longest increasing subsequence, Josephus, islands, a calculator without `eval()`, edit distance, shortest path, a fast prime count, 9-queens, fixing a binary search that never ends). I worked out the answers with my own code first.
+
+| Model | Score | Time | Misses (from the transcripts) |
+|---|---|---|---|
+| Baroque | **9/10** | 214 s | Calculator: all 5 tool rounds crashed with the same tokenizer bug |
+| Art Deco (Qwen3-Coder) | 6/10 | 385 s | Calculator: same kind of bug. Edit distance: pasted the code in the reply instead of calling the tool, and the loop guard stopped it. Primes: a broken sieve printed 1,998,585, it told the user "199,858", then ran the same code 5 times. Islands: got 7, then looped while explaining it |
+| Mosaic | **9/10** | 559 s | 9-queens: wrote the same function 3 times while thinking and the loop guard stopped it, so the code never ran |
+
+Mosaic was the only one to get the calculator right. Baroque's reply on that task also "contained the answer", but only because "9" is part of the expression, so the eval's text check is loose for one-digit answers. It still failed, because its last run crashed.
+
+**Conclusion: auto-picking isn't worth building yet.**
+- **Art Deco never wins.** Named the code model, it scored lowest on both coding sets (6/10 here, and 15/15 on the easy set only after an XML fix).
+- **Mosaic helps only a little.** It fixes some of Baroque's hard-math misses, but it's about 3x slower on everything, and a picker can't know ahead of time which problems Baroque will miss.
+- **A better idea:** a "try again, thinking harder" button that reruns one answer on Mosaic would get most of the benefit without guessing.
+
+Caveats: 10 coding tasks is small, and I chose the math problems because Baroque missed them, so they're the ones most likely to favor another model.
+
 ## Caveats
 
 - 45 to 50 problems per set, except MATH-500. A gap of one or two questions is noise.

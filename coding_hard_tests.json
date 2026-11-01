@@ -1,0 +1,42 @@
+[
+  {
+    "message": "Write a function that counts how many different ways you can make 250 cents using coins of 1, 5, 10, 25, 50 and 100 cents (order doesn't matter). Run it and tell me the number.",
+    "answer": "6148"
+  },
+  {
+    "message": "Write a function that finds the length of the longest strictly increasing subsequence (not necessarily contiguous) of [10, 22, 9, 33, 21, 50, 41, 60, 80, 3, 65, 71, 1, 90, 47]. Run it.",
+    "answer": "8"
+  },
+  {
+    "message": "50 people stand in a circle numbered 1 to 50. Starting from person 1, count 1, 2, 3, 4 and remove the 4th person; keep counting from the next person, removing every 4th, until one is left. Write code to find the number of the last person standing and run it.",
+    "answer": "47"
+  },
+  {
+    "message": "Count the islands in this grid, where 1 is land, 0 is water, and land connects only up, down, left and right (not diagonally). Write the code and run it.\n11000110\n11000100\n00100001\n00011011\n10000011\n10110000",
+    "answer": "7"
+  },
+  {
+    "message": "Write a calculator function that evaluates a math expression string with + - * / % ** and parentheses, following normal order of operations, without using eval() or exec(). Run it on \"(7 - 2) * (3 + 9) / 4 - 2 ** 3 + 10 % 4\".",
+    "answer": "9"
+  },
+  {
+    "message": "Write a function for the edit distance (Levenshtein distance: the fewest single-letter inserts, deletes or substitutions) between two words. Run it on 'photosynthesis' and 'phosphorescence'.",
+    "answer": "11"
+  },
+  {
+    "message": "A map has these two-way roads with lengths: A-B 4, A-C 2, B-C 5, B-D 10, C-E 3, E-D 4, D-F 11, E-F 9, B-F 17. Write code that finds the length of the shortest route from A to F and run it.",
+    "answer": "14"
+  },
+  {
+    "message": "Write code that counts how many prime numbers are below 2,000,000. It has to finish in under 10 seconds. Run it.",
+    "answer": "148933"
+  },
+  {
+    "message": "Write code that counts how many ways you can place 9 queens on a 9x9 chessboard so that no two attack each other. Run it.",
+    "answer": "352"
+  },
+  {
+    "message": "This binary search never finishes on some inputs. Find the bug, fix it, and use the fixed version to find the index of 37 in [2, 5, 8, 12, 16, 23, 37, 41, 56, 72, 91].\n\ndef search(arr, target):\n    lo, hi = 0, len(arr) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:\n            lo = mid\n        else:\n            hi = mid - 1\n    return -1",
+    "answer": "6"
+  }
+]
