@@ -16,7 +16,7 @@ source .venv/bin/activate
 uvicorn server:app --port 8000      # web app at http://localhost:8000 (restart after Python changes)
 python agent.py                     # terminal chat
 python test_checks.py               # code-side memory checks, no model, < 1 s
-python eval_routing.py              # 30 messages, ~1.5 min
+python eval_routing.py              # 30 messages, ~1.5 min (--tests routing_file_tests.json / routing_text_tests.json: with a file)
 python eval_memory.py               # 13 forget/memory messages on a fake memory list (never touches memory.json)
 python eval_hard.py / eval_skill.py # math and missed-question evals
 python eval_math500.py --mode tools # MATH-500 (data/math500.jsonl, graded by math_grader.py): 2 to 5 hours; --limit N, --rerun-cut OLD_LIMIT; resumes after a crash
@@ -60,11 +60,12 @@ python eval_multiturn.py            # 11 conversations on a fake memory file, ~2
 - 10-31 (EVALS.md section 9): MATH-500 with tools, 16,384-token limit: Baroque 402/500 (80.4%), Qwen3-30B-A3B-Instruct-2507 475/500 (95.0%; 440 at 4,000 tokens). The grader was fixed for 26 right answers marked wrong (all confirmed). The 2507 matches or beats Baroque on every eval except routing 29/30 ("btw im taking AP Gov" calls remember; the gate refuses). Rishabh made it Baroque on 10-31; rerun on it: held-out no tools 39/45 (Ornate 45/45), hard no tools 50/50, slips 7/9 by reading. Mosaic: math 45/45 and 50/50, MATH-500 first 100: 95 (2507 94, Baroque 88) but ~3x slower, routing 27/30. Art Deco: routing 23/30, coding 14/15; its tool use flips with small prompt changes and it sometimes writes "Let me run this code" then pastes code instead of calling the tool (the loop guard stops repeats). Coding eval: Baroque, 2507, Mosaic 15/15.
 - Baroque's memory eval depends on the prompt's date: 10/13 on 10-31, 12/13 with the date set to 10-28 (what do you remember / whats in your memory call remember / forget; gates stop both).
 - 11-01: MATH-500 no tools on Baroque 481/500 (96.2%) vs Ornate 475/500: the tools don't help on competition math (they do on the arithmetic held-out set, 39 -> 45). Art Deco wrote `<code>` instead of `<parameter=code>` 18 times in the coding eval, so its code never ran; `xml_tool_call` reads plain argument tags now, and it scores 15/15 coding. Art Deco's routing/files/memory move with the date (21/30, 12/17, 10/13 on 11-01). Web app tested end to end on port 8001 (Stop, scrolling, starters, Mosaic hiding its thinking).
+- 11-01 (EVALS.md section 10): files now go before the typed words in `<document>` tags (`files.attach`, used by server, `/file` and `eval_routing.py`). New `routing_text_tests.json` (10 writing + 3 counting tasks on a file): 7/13 -> 8/13 alone, 10/13 with check; file routing 17/17 with check (15/17 alone). A prompt rule ("write it yourself") didn't help and was removed. Routing 30 is 28/30 on 11-01 with old and new code alike (date). Still calling Python: shorten, translate, outline.
 - Web app 10-31: Stop button (`POST /stop`), scrolling up during an answer stays put, new chat shows the box centered with starter ideas.
 
 ## Next up
 
 1. Auto-picking the model (Rishabh wants picker first, auto later): measure before building.
-2. The run_python-on-non-math misses in the file routing tests (Baroque, 2507 and Art Deco; Mosaic doesn't).
+2. The 3 writing tasks that still call run_python (shorten, translate, outline in routing_text_tests.json); maybe a fresh test set too.
 3. Windows port (laptop with RTX 4070, 8 GB VRAM). MLX is Mac-only, so harness.py needs a second engine: llama-cpp-python with CUDA and GGUF files, picked by platform, keeping the Baroque/Filigree names. Filigree (8B, ~5 GB at 4-bit) fits in VRAM; Baroque (30B MoE, ~17 GB) needs its expert layers kept in system RAM, so check the laptop's RAM first.
 4. Then: fine-tuning (LoRA on MLX) with before/after evals on data it never trained on, vision, RAG over class notes, multi-language code runner with a sandbox.

@@ -5,7 +5,7 @@ import re
 import time
 from assistant import SYSTEM_PROMPT, add_memory_hint, check_missed_save, load_skill
 from harness import ask_model, MODEL, THINK, find_tool_call
-from files import read_file
+from files import read_file, attach
 
 # --tests routing_file_tests.json runs the messages that come with a file attached
 parser = argparse.ArgumentParser()
@@ -37,7 +37,7 @@ start = time.time()
 records = []
 for t in tests:
     # a test can attach a file; it is added the same way the web app and /file do it
-    attached = f"\n\n[File: {os.path.basename(t['file'])}]\n{read_file(t['file'])}" if "file" in t else ""
+    attached = attach(os.path.basename(t["file"]), read_file(t["file"])) if "file" in t else ""
     messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": add_memory_hint(t["message"], attached)}]
     # only the model's first reply matters here, so no tools are actually run
     reply = ask_model(messages, use_tools=True, show=False)
@@ -65,7 +65,8 @@ for t in tests:
 score = sum(r["correct"] for r in records)
 raw_score = sum(r["raw_correct"] for r in records)
 os.makedirs("results", exist_ok=True)
-name = "routing" if args.tests == "routing_tests.json" else "routing_files"   # don't overwrite the main routing results
+# each test file gets its own results, so one run doesn't overwrite another's
+name = {"routing_tests.json": "routing", "routing_file_tests.json": "routing_files"}.get(args.tests, args.tests.removesuffix(".json").removesuffix("_tests"))
 path = f"results/{name}__{MODEL.split('/')[-1]}__think{'1' if THINK else '0'}.json"
 with open(path, "w") as f:
     json.dump({"model": MODEL, "thinking": THINK, "score": score, "raw_score": raw_score, "records": records}, f, indent=2)

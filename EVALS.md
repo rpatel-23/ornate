@@ -490,6 +490,34 @@ Coding is the only eval where the fix changes anything, and it took 40% less tim
 
 The DeepSeek-R1 paper (January 2025) lists MATH-500 scores of 74.6% for GPT-4o, 78.3% for Claude 3.5 Sonnet, 90.0% for o1-mini, and 96.4% for o1. Those were measured without tools, with each lab's own prompt and grading, so they are not directly comparable to the numbers above. MATH has also been public for years, so these problems may be in any model's training data.
 
+## 10. Writing tasks on a file: where the file goes
+
+On 11-01 the only file-routing miss left on Baroque was "fix the grammar in my essay", which called `run_python` with code like `text.replace("is", "are")`. That replaces "is" inside every word too ("This" becomes "Thare"), so it isn't a harmless miss. One test is too few to fix against, so before changing anything I wrote 13 new tests (`routing_text_tests.json`): 10 writing tasks on the made-up files in `test_files/` (rewrite, make formal, shorten, translate, outline, title, tone...) that should get no tool, and 3 counting tasks (word count, how often a word appears, how many scores are above 80) that should call `run_python`, to catch a fix that goes too far.
+
+Baseline: **7/13** model alone, 8/13 with the code check. Five writing tasks called Python; for "translate this article into spanish" it imported `googletrans` (not installed) and tried to `open('article.txt')`, a file that isn't on disk.
+
+**A prompt rule didn't help.** Adding "When the answer is writing (new or changed text), write it yourself" (in general terms, not the tests' wording) left the new tests at 7/13 and dropped file routing from 16/17 to 15/17. It was removed.
+
+**The file's place in the message did.** The app put the file after the request: `fix the grammar in my essay` then `[File: essay.txt]` and the text. A scratch test on all 30 file messages, counting only "Python or not" right:
+
+| How the file is attached | Right about Python |
+|---|---|
+| Request, then `[File: essay.txt]` and the text (before) | 24/30 |
+| `[File: essay.txt]` and the text, then the request | 25/30 |
+| A line saying the full text is already here, the text in `<document name="essay.txt">` tags, then the request | **27/30** |
+
+The third is now `files.attach`, used by the web app, `/file` in the terminal, and `eval_routing.py`, so the eval sends exactly what the app sends. Full evals after the change:
+
+| Eval | Before | After |
+|---|---|---|
+| Writing and counting on a file, 13 | 7/13 alone, 8/13 with check | **8/13** alone, **10/13** with check |
+| File routing, 17 | 14/17 alone, 16/17 with check | **15/17** alone, **17/17** with check |
+| Routing, 30 (no files) | 29/30 on 10-31 | 28/30 |
+
+The routing drop is the date, not this change: those 30 messages have no files, and the committed code from before the change also scored 28/30 on 11-01 (new miss: "I got a 1410 on the SAT. is that a good score?" picks the missed-question skill).
+
+Still failing: "shorten my cover letter to one paragraph", "translate this article into spanish" and "turn these notes into an outline" call Python. The 3 counting tasks still call Python, as they should. The new tests were written by me and looked at while choosing the format, so a fresh set would be a fairer check.
+
 ## Caveats
 
 - 45 to 50 problems per set, except MATH-500. A gap of one or two questions is noise.

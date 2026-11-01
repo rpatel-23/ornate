@@ -1,0 +1,15 @@
+[
+ {"message": "make my essay sound more formal", "file": "test_files/essay.txt", "expect": "none"},
+ {"message": "rewrite the first paragraph of my essay", "file": "test_files/essay.txt", "expect": "none"},
+ {"message": "give this essay a better title", "file": "test_files/essay.txt", "expect": "none"},
+ {"message": "write a conclusion for my essay", "file": "test_files/essay.txt", "expect": "none"},
+ {"message": "shorten my cover letter to one paragraph", "file": "test_files/cover_letter.txt", "expect": "none"},
+ {"message": "check my cover letter for spelling mistakes", "file": "test_files/cover_letter.txt", "expect": "none"},
+ {"message": "translate this article into spanish", "file": "test_files/article.txt", "expect": "none"},
+ {"message": "what's the tone of this article?", "file": "test_files/article.txt", "expect": "none"},
+ {"message": "turn these notes into an outline", "file": "test_files/bio_notes.txt", "expect": "none"},
+ {"message": "rewrite my resume summary to sound more professional", "file": "test_files/resume.txt", "expect": "none"},
+ {"message": "how many words is my essay?", "file": "test_files/essay.txt", "expect": "python"},
+ {"message": "how many times does the word sleep show up in my essay?", "file": "test_files/essay.txt", "expect": "python"},
+ {"message": "how many students scored above 80?", "file": "test_files/scores.txt", "expect": "python"}
+]

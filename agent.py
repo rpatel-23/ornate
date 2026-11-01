@@ -2,6 +2,7 @@ import os
 import re
 from assistant import system_prompt, respond, unload_skills, read_file, run_quiz, add_memory_hint, check_missed_save, clear_memory_hints
 import memory
+from files import attach
 
 messages = [{"role": "system", "content": system_prompt()}]
 attached = ""  # file text waiting to go out with your next message
@@ -53,7 +54,7 @@ while True:
     if user.startswith("/file "):
         path = user[6:].strip().strip("'\"").replace("\\ ", " ")
         try:
-            attached += f"\n\n[File: {path}]\n{read_file(path)}"
+            attached += attach(os.path.basename(path), read_file(path))   # just the name: the full path can have personal folder names
             print("attached", path)
         except Exception as e:
             print("couldn't read that file:", e)

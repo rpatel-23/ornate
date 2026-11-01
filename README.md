@@ -33,8 +33,9 @@ All on Baroque, Ornate's default model (Qwen3 30B-A3B-Instruct-2507), unless not
 | Math, 50 hard problems | **50/50** with the Python tool, 50/50 without |
 | Writing and running code, 15 tasks | **15/15** (Mosaic and Art Deco also 15/15) |
 | Naming the exact mistake behind a wrong answer, 9 problems | **7/9** (the original 30B-A3B: 8/9 with thinking, 6/9 without) |
-| Picking the right first move, 30 messages | **29/30** |
-| Picking the right first move with a file attached, 17 messages | **16/17** with the code check, 14/17 without |
+| Picking the right first move, 30 messages | **29/30** (28/30 on Nov 1: the date in the prompt flips one answer) |
+| Picking the right first move with a file attached, 17 messages | **17/17** with the code check, 15/17 without |
+| Writing tasks on an attached file (rewrite, shorten, translate) and counting tasks, 13 messages | **10/13** with the code check, 8/13 without |
 | Saving and forgetting on a fake memory list, 13 messages | **12/13** |
 | Multi-turn conversations (confirm deletes, skills don't leak, follow-ups), 11 | **11/11** |
 | 30B mixture-of-experts vs 32B dense (original 30B-A3B) | about **8× faster**, same or better scores |
@@ -108,6 +109,7 @@ Full numbers and transcripts are in [EVALS.md](EVALS.md).
 - **The code model looked bad at tools because the harness couldn't read it.** Qwen3-Coder scored 17/30 on routing. Its transcripts showed it calling the right tools, but often without the `<tool_call>` tags around them, so nothing ran. Reading that format took it to 23/30. It still sometimes writes "Let me run this code" and pastes the code as text instead of calling the tool, and once did it 24 times in a row, so code now stops an answer that starts repeating itself.
 - **Most of the newer model's misses were running out of room, not wrong math.** On MATH-500, 51 of the 2507 model's 60 misses hit the 4,000-token reply limit before giving an answer. Raising the limit to 16,384 took it from 88.0% to 95.0%. The same change did nothing for the original model: its long replies were loops, not unfinished work. The grader also first marked 26 right answers wrong because they were written differently (`2516` for `2516_8`, a mixed number for a fraction). I fixed the grader, tested each rule on wrong answers too, and had a separate check confirm every flip.
 - **The tools help on arithmetic, not on competition math.** On 45 arithmetic-heavy problems, the Python tool takes the newer model from 39/45 to 45/45. On MATH-500 it made no measurable difference: 95.0% with tools, 96.2% without. Without measuring both, I would have credited the harness for a score the model gets on its own.
+- **Where the file goes in the message changed what the model did with it.** With an essay attached after the request as `[File: essay.txt]`, the model answered "fix the grammar" by running `text.replace("is", "are")` on the whole essay, which also turns "This" into "Thare", and answered "translate this" by trying to open a file that didn't exist. A rule in the prompt didn't help. Putting the file first, inside document tags that say the text is already there, took 13 new writing and counting tasks from 7 to 10 right, with no prompt change. Shortening, translating and outlining still call Python.
 - **Anything that matters should be decided by code, not the model.** The model mis-scored quizzes, said "remembered." without saving, and deleted the wrong fact when asked to forget something it didn't have. Quiz scoring, saving, and deleting are now handled in Python.
 - **A safety check caused the bug it was built to stop.** To catch fake saves, I scanned answers for words like "stored". Then a photosynthesis explanation ("energy is stored in glucose") came back as "Already saved." The check now looks only at what the user typed, and `test_checks.py` covers ordinary sentences that must never trigger it.
 - **One line of the prompt made "what do you know about me?" try to delete everything.** The forget instructions read so much like the question that the model called `forget` on every saved fact, and three other ways of asking did the same. Even the date at the top of the prompt changed which ones failed, so rewording was not a fix. Now `forget` refuses unless the user's message asks to delete, and with the line removed the model stopped trying.
@@ -136,6 +138,7 @@ flowchart LR
 ```
 python test_checks.py    # code-side checks for memory, no model needed (under a second)
 python eval_routing.py   # does it pick the right first move? (30 messages)
+                         # --tests routing_file_tests.json / routing_text_tests.json: with a file attached
 python eval_memory.py    # forget requests and memory questions against a fake memory list (13 messages)
 python eval_hard.py      # 50 math problems, with and without the Python tool
 python eval_skill.py     # 9 missed questions, graded by reading the output

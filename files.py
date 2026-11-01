@@ -18,6 +18,12 @@ def text_from(name, data):
         text = text[:MAX_CHARS] + "\n[file cut off here because it is too long]"
     return text
 
+def attach(name, text):
+    """How a file goes into a message (web app, /file and the routing eval). It goes before the typed words, in document tags.
+    With "[File: essay.txt]" after the request, the model ran Python on writing tasks and tried to open() the file:
+    24/30 right about Python that way, 27/30 this way (EVALS.md section 10)."""
+    return f'The user attached a file. Its full text is already below, so there is nothing to open.\n<document name="{name}">\n{text}\n</document>\n\n'
+
 def read_file(path):
     with open(path, "rb") as f:
         return text_from(path, f.read())

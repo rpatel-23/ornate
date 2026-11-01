@@ -13,7 +13,7 @@ import memory
 import chats
 import harness
 from typing import Optional
-from files import text_from
+from files import text_from, attach
 from assistant import system_prompt, respond, unload_skills, add_memory_hint, check_missed_save, clear_memory_hints, pending_delete
 
 app = FastAPI()
@@ -89,7 +89,7 @@ def chat(body: ChatIn):
                 open_chat(body.chat_id)
                 # read the files first: if one can't be read, stop before anything is added to the chat
                 for f in body.files:
-                    attached += f"\n\n[File: {f.name}]\n{text_from(f.name, base64.b64decode(f.data))}"   # same format as /file in the terminal
+                    attached += attach(f.name, text_from(f.name, base64.b64decode(f.data)))   # same format as /file in the terminal
                     names.append(f.name)
                 editing = body.edit is not None and body.edit < len(turn_starts)
                 if editing and not body.files:

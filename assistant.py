@@ -227,11 +227,11 @@ def clear_memory_hints(messages):
 
 def add_memory_hint(text, attached=""):
     """Called on every user message: records it, and flags it if it asks to save something.
-    attached = text of any files sent with it. It goes before the hint, because clear_memory_hints
-    only finds the hint at the very end; and only the typed words count as a save request."""
+    attached = text of any files sent with it (files.attach). It goes first, so the request is the last thing the model reads;
+    the hint goes at the very end, because clear_memory_hints only looks there; and only the typed words count as a save request."""
     global last_user_text
     last_user_text = text
-    text = text + handle_delete_reply(text) + attached   # a yes/no to a pending delete is settled in code first
+    text = attached + text + handle_delete_reply(text)   # a yes/no to a pending delete is settled in code first
     return text + HINT if is_save_request(last_user_text) else text
 
 # the user says they missed a question: "I put 5", "I answered the 2nd", "marked wrong", "the key says 8"...
