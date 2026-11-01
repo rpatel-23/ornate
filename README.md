@@ -92,14 +92,7 @@ Commands: `/file <path>`, `/quiz <topic>`, `/style roast` or `/style plain`, `/m
 
 ## How it works
 
-```mermaid
-flowchart LR
-    A([Your message]) --> B[System prompt<br/>date, tools, skills, memory]
-    B --> C{Model}
-    C -- tool call --> D[Harness runs the tool<br/>and adds the result]
-    D -- up to 5 rounds --> C
-    C -- no tool call --> E([Final answer])
-```
+<p align="center"><img src="docs/how-it-works.svg" alt="Your message goes into the system prompt (date, tools, skills, memory) and then to the model. If the model calls a tool, the harness runs it, adds the result, and asks the model again, up to 5 rounds. With no tool call, that reply is the final answer." width="860"></p>
 
 | File | What it does |
 |---|---|
