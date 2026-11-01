@@ -36,7 +36,7 @@ python eval_multiturn.py            # 11 conversations on a fake memory file, ~2
 - `memory.py`: facts in `memory.json` (git-ignored, personal, never commit it).
 - `agent.py`: terminal chat and slash commands. `server.py` + `static/index.html`: FastAPI web app (NDJSON streaming, lock, queue, memory popup, copy, edit a sent message, sidebar, settings panel: theme in the browser, thinking mode on the server until restart; KaTeX math from a CDN; files by drag-and-drop or paperclip, sent as base64 and read by `files.text_from`; the open chat's id sits in the URL after #, so a refresh keeps it). `chats.py`: saved chats as JSON files in `chats/` (git-ignored, personal), folders in `chats/folders.json`. `quiz.py`, `files.py`, `skills/`, `styles/`.
 - `tokenizer.py`, `data.py`, `bigram.py`, `gpt.py`: the tiny GPT from the start of the project.
-- `EVALS.md`: every eval with numbers and findings. `results/`: saved transcripts.
+- `EVALS.md`: every eval with numbers and findings. `docs/findings.md`: the full "What I found" list (the README keeps 5 short highlights). `results/`: saved transcripts.
 
 ## Rules we settled on
 
